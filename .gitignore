@@ -1,0 +1,28 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node / npm stuff (in case you add JS or tools later)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Vercel folder
+.vercel/
+
+# Build/output folders (if you ever use tools)
+dist/
+build/
+
+# Temporary files
+*.tmp
+*.log
+
+# IDE/editor folders
+.vscode/
+.idea/
+
+# Backup files
+*.bak
+*.swp
+*.swo

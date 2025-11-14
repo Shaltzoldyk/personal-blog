@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>dik mode</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <h1 class="site-title">Fuck it, Shaltz mode</h1>
+
+  <!-- main-content is the PJAX replace target -->
+  <main id="main-content">
+    <div class="collage-frame">
+      <div class="collage-row">
+        <!-- images stay the same; script will make them interactive -->
+        <img src="images/luck.jpeg" class="collage-img" alt="luck">
+        <img src="images/get-a-load.jpeg" class="collage-img" alt="get a load">
+        <img src="images/hellyah.jpeg" class="collage-img" alt="hellyah">
+        <img src="images/gojo.jpeg" class="collage-img" alt="gojo">
+        <img src="images/music-listernoor.jpeg" class="collage-img" alt="music">
+        <img src="images/teleport.jpeg" class="collage-img" alt="teleport">
+        <img src="images/wolf.jpeg" class="collage-img" alt="wolf">
+        <img src="images/toji-gojo.jpeg" class="collage-img" alt="toji gojo">
+        <img src="images/one-life.jpeg" class="collage-img" alt="one life">
+      </div>
+    </div>
+
+    <div class="post-list">
+      <h2 class="post-heading">Tried thinking, this is what I came up with:</h2>
+      <ul>
+        <!-- add .post-link so the popup handler recognizes these -->
+        <li><a href="posts/trade-framework.html" class="neon-link post-link">The trade framework</a></li>
+        <li><a href="posts/doom-part1.html" class="neon-link post-link">Doom Part 1</a></li>
+      </ul>
+    </div>
+  </main>
+
+  <!-- Mini-opener template (created once and reused) -->
+  <div id="mini-opener" class="mini-opener hidden" role="dialog" aria-hidden="true">
+    <div class="mini-bar" id="miniBar" aria-label="Image window drag bar">
+      <button class="mini-close" id="miniClose" aria-label="Close window">&times;</button>
+    </div>
+    <div class="mini-content" id="miniContent">
+      <img src="" alt="" id="miniImage">
+    </div>
+  </div>
+
+  <!-- Post popup and player DOM will be created by JS if missing -->
+  <!-- Include scripts site-wide (adjust paths if you place them elsewhere) -->
+  <script src="js/player.js" defer></script>
+  <script src="js/post-popup.js" defer></script>
+  <script src="js/pjax.js" defer></script>
+
+  <!-- existing inline image-opener script (unchanged) -->
+  <script>
+    (function () {
+      const opener = document.getElementById('mini-opener');
+      const miniImage = document.getElementById('miniImage');
+      const miniClose = document.getElementById('miniClose');
+      const miniBar = document.getElementById('miniBar');
+
+      // Apply random rotations to collage images (keeps your scattered vibe)
+      const imgs = document.querySelectorAll('.collage-img');
+      imgs.forEach((img) => {
+        const r = (Math.random() * 6 - 3).toFixed(2); // -3deg .. +3deg
+        img.style.transform = `rotate(${r}deg)`;
+        img.style.cursor = 'pointer';
+      });
+
+      // Utility: detect mobile small screens
+      function isSmallScreen() {
+        return window.matchMedia('(pointer: coarse) and (max-width: 720px)').matches ||
+               window.innerWidth < 720;
+      }
+
+      // Open the mini-opener. If nearPos supplied, place near that rect; otherwise center.
+      function openMini(src, alt, nearRect) {
+        miniImage.src = src;
+        miniImage.alt = alt || '';
+        opener.classList.remove('hidden');
+        opener.setAttribute('aria-hidden', 'false');
+
+        // Place near clicked image for desktop; center on small screens
+        if (!isSmallScreen() && nearRect) {
+          // compute an offset so it appears slightly above/right
+          const OFFSET_X = 20;
+          const OFFSET_Y = -10;
+          let left = nearRect.right + OFFSET_X;
+          let top = nearRect.top + OFFSET_Y;
+
+          // If it would go off-screen to the right, position to the left of the image
+          const vw = window.innerWidth;
+          const openerW = Math.min(520, vw - 40); // same as CSS max-width
+          if (left + openerW > vw - 10) {
+            left = Math.max(10, nearRect.left - openerW - OFFSET_X);
+          }
+
+          // If top goes above viewport, clamp
+          top = Math.max(10, top);
+
+          opener.style.left = left + 'px';
+          opener.style.top = top + 'px';
+          opener.style.transform = 'scale(1) rotate(' + (Math.random()*2 -1).toFixed(2) + 'deg)';
+        } else {
+          // Center for small screens or if no rect
+          opener.style.left = '50%';
+          opener.style.top = '50%';
+          opener.style.transform = 'translate(-50%, -50%) rotate(' + (Math.random()*2 -1).toFixed(2) + 'deg)';
+        }
+      }
+
+      function closeMini() {
+        opener.classList.add('hidden');
+        opener.setAttribute('aria-hidden', 'true');
+        miniImage.src = '';
+      }
+
+      // Click handlers: images open the mini-opener
+      imgs.forEach(img => {
+        img.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const rect = img.getBoundingClientRect();
+          openMini(img.src, img.alt, rect);
+        });
+      });
+
+      // Close on clicking close button
+      miniClose.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeMini();
+      });
+
+      // Close when clicking outside the opener
+      document.addEventListener('click', (e) => {
+        if (opener.classList.contains('hidden')) return;
+        if (!opener.contains(e.target)) closeMini();
+      });
+
+      // ESC closes
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeMini();
+      });
+
+      // Make the mini window draggable by the top bar (desktop only)
+      (function makeDraggable() {
+        let isDragging = false;
+        let startX = 0, startY = 0, origLeft = 0, origTop = 0;
+
+        miniBar.addEventListener('pointerdown', (ev) => {
+          // Only drag on non-touch small screens? We allow pointer-based dragging
+          isDragging = true;
+          miniBar.setPointerCapture(ev.pointerId);
+          startX = ev.clientX;
+          startY = ev.clientY;
+
+          // If opener is positioned via translate(-50%,-50%), compute current offset
+          const style = getComputedStyle(opener);
+          const left = parseFloat(style.left);
+          const top = parseFloat(style.top);
+
+          origLeft = isNaN(left) ? 0 : left;
+          origTop = isNaN(top) ? 0 : top;
+
+          // if opener centered via 50% left/top, convert to pixels baseline
+          if (style.left.includes('%')) {
+            // place at center in pixels then start drag from center
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const el = opener.getBoundingClientRect();
+            origLeft = vw/2 - el.width/2;
+            origTop = vh/2 - el.height/2;
+            opener.style.left = origLeft + 'px';
+            opener.style.top = origTop + 'px';
+            opener.style.transform = 'none';
+          }
+
+          ev.preventDefault();
+        });
+
+        window.addEventListener('pointermove', (ev) => {
+          if (!isDragging) return;
+          const dx = ev.clientX - startX;
+          const dy = ev.clientY - startY;
+          opener.style.left = (origLeft + dx) + 'px';
+          opener.style.top = (origTop + dy) + 'px';
+        });
+
+        window.addEventListener('pointerup', (ev) => {
+          if (!isDragging) return;
+          isDragging = false;
+          try { miniBar.releasePointerCapture(ev.pointerId); } catch (e) {}
+        });
+      })();
+
+      // Respect reduced-motion (no spawn scale if user prefers reduced motion)
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReduced) {
+        opener.classList.add('reduced-motion');
+      }
+    })();
+  </script>
+</body>
+</html>
