@@ -9,6 +9,9 @@
  *  - Avoids calling history.back() when closing the popup to prevent PJAX/popstate races.
  *  - Restores the previous URL/state using history.replaceState() (no popstate event).
  *  - Saves the previous history state before opening so it can be restored cleanly.
+ *  - Integrates with page dim overlay (#page-dim-overlay) if present:
+ *      * Shows overlay when popup opens and hides when it closes.
+ *      * Clicking the overlay will close the popup (mirrors typical modal behavior).
  *
  * Include with:
  * <script src="js/post-popup.js" defer></script>
@@ -17,6 +20,7 @@
 (function () {
   const POPUP_ID = 'sh-post-popup';
   const STYLE_ID = 'sh-post-popup-inline-style';
+  const OVERLAY_ID = 'page-dim-overlay';
   let _inited = false;
   let _clickHandler = null;
   let _lastActiveElement = null;
@@ -25,6 +29,43 @@
   let _previousURL = null;
   let _previousState = null;
 
+  /* ---------------------------
+     Overlay helper functions
+     - These toggle the #page-dim-overlay element if present.
+     - Uses the same "hidden" + "visible" class pattern as styles.css/index.html
+     --------------------------- */
+  function getOverlay() {
+    try {
+      return document.getElementById(OVERLAY_ID);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function showOverlay() {
+    const overlay = getOverlay();
+    if (!overlay) return;
+    overlay.classList.remove('hidden');
+    // Ensure transition runs (add visible on next frame)
+    requestAnimationFrame(() => overlay.classList.add('visible'));
+    overlay.setAttribute('aria-hidden', 'false');
+  }
+
+  function hideOverlay() {
+    const overlay = getOverlay();
+    if (!overlay) return;
+    overlay.classList.remove('visible');
+    // wait for transition, then hide completely
+    const t = setTimeout(() => {
+      overlay.classList.add('hidden');
+      overlay.setAttribute('aria-hidden', 'true');
+      clearTimeout(t);
+    }, 240);
+  }
+
+  /* ---------------------------
+     Popup DOM creation & utilities
+     --------------------------- */
   function createPopupDOM() {
     let popup = document.getElementById(POPUP_ID);
     if (popup) return popup;
@@ -63,6 +104,18 @@
 
     // Append to body (outside #main-content so PJAX won't remove it)
     document.body.appendChild(popup);
+
+    // If overlay exists, wire it to close the popup when clicked (mirror modal behavior).
+    // This is defensive: other scripts may also bind overlay; this handler is idempotent.
+    const overlay = getOverlay();
+    if (overlay && !overlay.dataset.__shOverlayBound) {
+      overlay.dataset.__shOverlayBound = '1';
+      overlay.addEventListener('click', () => {
+        // Attempt to close the popup in the same way close handlers do
+        closePopup(true);
+      });
+    }
+
     return popup;
   }
 
@@ -121,6 +174,10 @@
     return doc.body.cloneNode(true);
   }
 
+  /* ---------------------------
+     Show / close logic
+     - Integrates overlay toggling for improved readability.
+     --------------------------- */
   function showPopupWithContent(htmlNode, url) {
     const popup = createPopupDOM();
     const bodyEl = popup.querySelector('.sh-popup-body');
@@ -137,6 +194,9 @@
 
     popup.classList.remove('hidden');
     popup.setAttribute('aria-hidden', 'false');
+
+    // also show the global page-dim overlay if present
+    showOverlay();
 
     // focus management: focus the window for screen readers
     const win = popup.querySelector('.sh-popup-window');
@@ -170,6 +230,9 @@
 
     const bodyEl = popup.querySelector('.sh-popup-body');
     if (bodyEl) bodyEl.innerHTML = '';
+
+    // hide overlay as we close
+    hideOverlay();
 
     // restore focus
     try {
@@ -205,7 +268,9 @@
     document.dispatchEvent(new CustomEvent('sh:popup-close'));
   }
 
-  // Delegated click handler for document-level interception
+  /* ---------------------------
+     Delegated click handler for document-level interception
+     --------------------------- */
   function _documentClickHandler(ev) {
     if (ev.defaultPrevented) return;
 
@@ -237,6 +302,9 @@
     created.classList.remove('hidden');
     created.setAttribute('aria-hidden', 'false');
 
+    // Also show overlay while loading to give immediate feedback
+    showOverlay();
+
     // Fetch and extract content
     fetch(href, { method: 'GET', credentials: 'same-origin' })
       .then(res => {
@@ -258,6 +326,8 @@
       })
       .catch(err => {
         console.warn('Post popup failed, falling back to navigation', err);
+        // hide overlay (we showed it earlier)
+        hideOverlay();
         // fallback to full navigation
         try {
           window.location.href = href;
@@ -267,6 +337,9 @@
       });
   }
 
+  /* ---------------------------
+     Handlers initialization
+     --------------------------- */
   function initLinkHandlers() {
     // ensure we only attach one global handler
     if (_inited && _clickHandler) return;
@@ -311,6 +384,8 @@
           p.setAttribute('aria-hidden', 'true');
           const bodyEl = p.querySelector('.sh-popup-body');
           if (bodyEl) bodyEl.innerHTML = '';
+          // hide overlay when popstate closes the popup
+          hideOverlay();
           document.dispatchEvent(new CustomEvent('sh:popup-close'));
           // restore focus when closing via popstate
           try {

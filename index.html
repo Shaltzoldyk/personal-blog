@@ -4,13 +4,218 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Fuck it, Shaltz mode</title>
+
+  <!-- FAVICON / PWA (place files in project root) -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#b6ff00">
+
   <link rel="stylesheet" href="styles.css" />
+
+  <!-- Inline styles for the page-dim overlay + hub layout (kept here so this single-file update works immediately).
+       You can move these rules to styles.css later if you prefer. -->
+  <style>
+    /* utility hidden class (kept local-safe) */
+    .hidden { display: none !important; }
+
+    /* full-page dim overlay */
+    #page-dim-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35); /* medium dim for readability */
+      z-index: 995; /* should sit under the popup but above page content */
+      pointer-events: none; /* allow clicks to pass through when not active */
+      opacity: 0;
+      transition: opacity 220ms ease;
+      will-change: opacity;
+    }
+
+    /* when visible, intercept clicks and become active */
+    #page-dim-overlay.visible {
+      pointer-events: auto;
+      opacity: 1;
+    }
+
+    /* small accessibility hint: reduce motion for users who prefer reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      #page-dim-overlay { transition: none; }
+    }
+
+    .site-logo {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      vertical-align: middle;
+      margin-right: 10px;
+      border-radius: 6px;
+      border: 2px solid rgba(255,255,255,0.06);
+    }
+
+    .header-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* --------------------------
+       HUB LAYOUT: side cards + centered rotator
+       -------------------------- */
+    .hub {
+      max-width: 1100px;
+      margin: 18px auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 260px 1fr 260px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    /* left / right stacked cards container */
+    .side-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    /* card (now a neutral container DIV, not an anchor) */
+    .side-card {
+      background: linear-gradient(180deg, #0a0a0a, #080808);
+      border-radius: 8px;
+      border: 6px solid #fff;
+      padding: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+      color: #dfe;
+      transition: transform 160ms ease, box-shadow 160ms ease;
+      position: relative;
+    }
+
+    .side-card:focus-within,
+    .side-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 18px 48px rgba(0,0,0,0.6), 0 0 28px rgba(182,255,0,0.06);
+      outline: none;
+    }
+
+    /* This is the clickable title inside the card. Only this element is an anchor. */
+    .side-card .title-link {
+      display: inline-block;
+      margin-top: 6px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      color: #b6ff00;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: rgba(0,0,0,0.02);
+    }
+
+    .side-card .title-link:hover,
+    .side-card .title-link:focus {
+      background: rgba(182,255,0,0.03);
+      outline: none;
+      box-shadow: 0 0 18px rgba(182,255,0,0.04);
+    }
+
+    .side-card .sub {
+      font-size: 12px;
+      color: rgba(255,255,255,0.8);
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    /* list of names under each card */
+    .side-card .item-list {
+      width: 100%;
+      margin: 0;
+      padding: 6px 8px;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: start;
+      flex: 1 1 auto;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .side-card .item-list li a {
+      color: rgba(255,255,255,0.9);
+      text-decoration: none;
+      font-family: "Courier New", monospace;
+      font-size: 14px;
+      padding: 4px 6px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .side-card .item-list li a:hover,
+    .side-card .item-list li a:focus {
+      color: #fff;
+      background: rgba(182,255,0,0.04);
+      outline: none;
+    }
+
+    .hub-rotator {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .rotator-frame {
+      max-width: 100%;
+      border: 4px solid #b6ff00;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+      transition: width 260ms ease, height 260ms ease;
+      background: #fff4;
+    }
+
+    .rotator-inner { display:flex; gap:8px; align-items:center; }
+
+    /* small responsive adjustments */
+    @media (max-width: 1100px) {
+      .hub { grid-template-columns: 220px 1fr 220px; gap: 12px; padding: 0 12px; }
+      .side-card { padding: 10px; }
+    }
+
+    @media (max-width: 860px) {
+      .hub {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+      }
+      .side-cards {
+        flex-direction: row;
+        gap: 12px;
+        overflow-x: auto;
+        padding: 8px 0;
+      }
+      .side-card { min-width: 180px; flex: 0 0 180px; }
+      .hub-rotator { order: -1; margin-bottom: 8px; }
+    }
+
+  </style>
 </head>
 <body>
 
   <!-- Bright top banner -->
   <header class="old-header" role="banner" aria-label="site banner">
-    <h1 class="old-site-title">Fuck it, Shaltz mode</h1>
+    <div class="header-brand">
+      <img src="/favicon-32x32.png" alt="site logo" class="site-logo" onerror="this.style.display='none'">
+      <h1 class="old-site-title">Fuck it, Shaltz mode</h1>
+    </div>
     <div class="old-sep" aria-hidden="true"></div>
     <div class="old-marquee" aria-hidden="true">Life is short, go long to hedge</div>
   </header>
@@ -18,27 +223,93 @@
   <!-- main-content is the PJAX replace target -->
   <main id="main-content" role="main">
 
-    <!-- Rotator (single-image carousel) -->
-    <section class="rotator-wrap" aria-live="polite" aria-label="image rotator">
-      <div class="rotator-inner">
-        <button class="rot-btn rot-prev" aria-label="Previous image" type="button">◀</button>
+    <!-- HUB: left cards (2) + center rotator + right cards (2) -->
+    <section class="hub" aria-label="Featured">
 
-        <!-- frame that will be sized dynamically by JS -->
-        <div class="rotator-frame" id="rotFrame" role="group" aria-roledescription="image frame" aria-label="Rotating images">
-          <img id="rotator" src="images/luck.jpeg" alt="rotating image" />
+      <!-- LEFT column: 2 stacked cards -->
+      <div class="side-cards" aria-hidden="false">
+        <!-- Music (left-top) — cover removed, title now sits at top -->
+        <div class="side-card" aria-labelledby="music-title" style="height:320px; min-height:320px; max-height:320px;">
+          <!-- clickable title only -->
+          <a id="music-title" class="title-link" href="https://open.spotify.com/user/shalvin.rautela" target="_blank" rel="noopener noreferrer">Music</a>
+          
+
+          <!-- editable list: replace items below with your names and links -->
+          <ul class="item-list" aria-label="Music items">
+            <li><a href="https://open.spotify.com/album/3b4E89rxzZQ9zkhgKpj8N4?si=QZJ4BwTaQiqXg8sVBaARcg" target="_blank" rel="noopener noreferrer">Animals — Pink Floyd</a></li>
+            <li><a href="https://open.spotify.com/album/77CZUF57sYqgtznUe3OikQ?si=Yq5ZQOrzT6GcRkvg_b5Mdw" target="_blank" rel="noopener noreferrer">I love my computer - Ninajirachi</a></li>
+            <li><a href="https://open.spotify.com/album/4Uv86qWpGTxf7fU7lG5X6F?si=oMB7dgk4RvCe8i5MDEGxlA" target="_blank" rel="noopener noreferrer">The college dropout - Ye</a></li>
+            <li><a href="https://open.spotify.com/album/6QaVfG1pHYl1z15ZxkvVDW?si=oc_LcYehQJCaa9OKux4mQw" target="_blank" rel="noopener noreferrer">Sgt. Pepper's lonely hearts club band - The Beatles</a></li>
+          </ul>
         </div>
 
-        <button class="rot-btn rot-next" aria-label="Next image" type="button">▶</button>
+        <!-- Books (left-bottom) — cover removed -->
+        <div class="side-card" aria-labelledby="books-title" style="height:320px; min-height:320px; max-height:320px;">
+          <a id="books-title" class="title-link" href="https://www.goodreads.com/user/show/137269621-shaltz" target="_blank" rel="noopener noreferrer">Books</a>
+          
+
+          <!-- editable book list -->
+          <ul class="item-list" aria-label="Book items">
+            <li><a href="https://www.goodreads.com/book/show/placeholder1" target="_blank" rel="noopener noreferrer"></a></li>
+            <li><a href="https://www.goodreads.com/book/show/placeholder2" target="_blank" rel="noopener noreferrer"></a></li>
+            <li><a href="https://www.goodreads.com/book/show/placeholder3" target="_blank" rel="noopener noreferrer"></a></li>
+            <li><a href="https://www.goodreads.com/book/show/placeholder4" target="_blank" rel="noopener noreferrer"></a></li>
+          </ul>
+        </div>
       </div>
 
-      <div class="rot-dots" id="rotDots" aria-hidden="false" aria-label="image indicators"></div>
+      <!-- CENTER: rotator -->
+      <div class="hub-rotator" role="region" aria-label="Image rotator">
+        <section class="rotator-wrap" aria-live="polite" aria-label="image rotator">
+          <div class="rotator-inner">
+            <button class="rot-btn rot-prev" aria-label="Previous image" type="button">◀</button>
+
+            <!-- frame that will be sized dynamically by JS -->
+            <div class="rotator-frame" id="rotFrame" role="group" aria-roledescription="image frame" aria-label="Rotating images">
+              <img id="rotator" src="images/luck.jpeg" alt="rotating image" />
+            </div>
+
+            <button class="rot-btn rot-next" aria-label="Next image" type="button">▶</button>
+          </div>
+
+          <div class="rot-dots" id="rotDots" aria-hidden="false" aria-label="image indicators"></div>
+        </section>
+      </div>
+
+      <!-- RIGHT column: 2 stacked cards -->
+      <div class="side-cards" aria-hidden="false">
+        <!-- Articles (right-top) — cover removed -->
+        <div class="side-card" aria-labelledby="articles-title" style="height:320px; min-height:320px; max-height:320px;">
+          <a id="articles-title" class="title-link" href="/articles.html" target="_blank" rel="noopener noreferrer">Articles</a>
+          
+
+          <!-- editable article list -->
+          <ul class="item-list" aria-label="Article items">
+            <li><a href="https://oldcoinbad.com/p/long-degeneracy" target="_blank" rel="noopener noreferrer">Long Degeneracy — Jez</a></li>
+            <li><a href="https://0xltr.substack.com/p/what-could-go-right" target="_blank" rel="noopener noreferrer">What could go right? - LTR</a></li>
+            <li><a href="https://vitalik.eth.limo/general/2024/04/01/dc.html" target="_blank" rel="noopener noreferrer">Degen communism - Vitalik</a></li>
+          </ul>
+        </div>
+
+        <!-- Movies (right-bottom) — cover removed -->
+        <div class="side-card" aria-labelledby="movies-title" style="height:320px; min-height:320px; max-height:320px;">
+          <a id="movies-title" class="title-link" href="https://letterboxd.com/Shaltzzz/" target="_blank" rel="noopener noreferrer">Movies</a>
+        
+
+          <!-- editable movie list -->
+          <ul class="item-list" aria-label="Movie items">
+            <li><a href="https://letterboxd.com/film/wild-strawberries/" target="_blank" rel="noopener noreferrer">Wild strawberries</a></li>
+            <li><a href="https://letterboxd.com/film/fight-club/" target="_blank" rel="noopener noreferrer">Fight club</a></li>
+            <li><a href="https://letterboxd.com/film/persona/" target="_blank" rel="noopener noreferrer">Persona</a></li>
+          </ul>
+        </div>
+      </div>
     </section>
 
-    <!-- Centered post list -->
-    <section class="post-list centered" aria-label="posts">
+    <!-- Centered post list (below hub on wide screens) -->
+    <section class="post-list centered" aria-label="posts" style="margin-top:22px;">
       <h2 class="post-heading">Tried thinking, this is what I came up with:</h2>
       <ul>
-        <!-- post-link class required by post-popup.js; data-title used for popup header -->
         <li><a href="posts/trade-framework.html" class="neon-link post-link" data-title="The Future Is a Trade">The trade framework</a></li>
         <li><a href="posts/doom-part1.html" class="neon-link post-link" data-title="Doom — Part 1">Doom Part 1</a></li>
       </ul>
@@ -55,6 +326,9 @@
       <img src="" alt="" id="miniImage" />
     </div>
   </div>
+
+  <!-- Page dim overlay (sits above page but below popup) -->
+  <div id="page-dim-overlay" class="hidden" aria-hidden="true"></div>
 
   <!-- Post popup overlay (ensures posts open in popup with black backdrop) -->
   <div id="sh-post-popup" class="hidden" role="dialog" aria-hidden="true" aria-modal="true" aria-label="Post content">
@@ -145,8 +419,6 @@
       if (els.rot) {
         els.rot.classList.remove('visible');
       }
-      // remove any previous event listeners by replacing buttons (simple safe approach)
-      // (replaceNode isn't necessary; we just rebind event handlers below)
     }
 
     function buildDots() {
@@ -293,6 +565,106 @@
     });
 
   })();
+  </script>
+
+  <!-- Overlay toggle script: shows/hides the page-dim overlay when posts open/close.
+       It hooks into clicks on .post-link and popup close/backdrop events.
+       This is intentionally small and resilient (listens for custom events too).
+  -->
+  <script>
+    (function () {
+      function q(sel, ctx) { return (ctx || document).querySelector(sel); }
+      function qAll(sel, ctx) { return Array.from((ctx || document).querySelectorAll(sel)); }
+
+      const overlay = document.getElementById('page-dim-overlay');
+
+      // show overlay
+      function showOverlay() {
+        if (!overlay) return;
+        overlay.classList.remove('hidden');
+        // give a small timeout to ensure transition runs after display change
+        requestAnimationFrame(() => overlay.classList.add('visible'));
+        overlay.setAttribute('aria-hidden', 'false');
+      }
+
+      // hide overlay
+      function hideOverlay() {
+        if (!overlay) return;
+        overlay.classList.remove('visible');
+        // wait for transition, then hide completely to remove from accessibility flow
+        const t = setTimeout(() => {
+          overlay.classList.add('hidden');
+          overlay.setAttribute('aria-hidden', 'true');
+          clearTimeout(t);
+        }, 240);
+      }
+
+      // Bind to post links (handles normal clicks; PJAX may also trigger popups)
+      function bindPostLinks() {
+        qAll('.post-link').forEach(a => {
+          // Avoid double-binding by marking
+          if (a.dataset.__dimBound) return;
+          a.dataset.__dimBound = '1';
+          a.addEventListener('click', () => {
+            // slight delay to allow any PJAX/post-popup actions to begin
+            // but show immediately for immediate UX feedback
+            showOverlay();
+          });
+        });
+      }
+
+      // Close overlay when popup-close is clicked or backdrop clicked
+      function bindPopupCloseers() {
+        const closeBtn = document.getElementById('shPopupClose');
+        if (closeBtn && !closeBtn.dataset.__dimBound) {
+          closeBtn.dataset.__dimBound = '1';
+          closeBtn.addEventListener('click', hideOverlay);
+        }
+
+        // backdrop inside popup (if your existing code closes the popup from this element)
+        const popupBackdrop = document.getElementById('shPopupBackdrop');
+        if (popupBackdrop && !popupBackdrop.dataset.__dimBound) {
+          popupBackdrop.dataset.__dimBound = '1';
+          popupBackdrop.addEventListener('click', hideOverlay);
+        }
+
+        // also hide when mini-close used (if applicable)
+        const miniClose = document.getElementById('miniClose');
+        if (miniClose && !miniClose.dataset.__dimBound) {
+          miniClose.dataset.__dimBound = '1';
+          miniClose.addEventListener('click', hideOverlay);
+        }
+      }
+
+      // Listen for custom events from your post-popup.js if it emits them
+      document.addEventListener('sh:popup-open', showOverlay);
+      document.addEventListener('sh:popup-close', hideOverlay);
+
+      // Re-bind on DOM ready and after PJAX events (so newly injected links are bound)
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+          bindPostLinks();
+          bindPopupCloseers();
+        });
+      } else {
+        bindPostLinks();
+        bindPopupCloseers();
+      }
+
+      ['pjax:complete', 'pjax:loaded', 'pjax:end'].forEach(ev => {
+        document.addEventListener(ev, () => {
+          try { bindPostLinks(); bindPopupCloseers(); } catch (e) {}
+        });
+      });
+
+      // If overlay itself is clicked, we hide popup (optional UX). This mirrors typical modal behavior.
+      overlay && overlay.addEventListener('click', () => {
+        // attempt to find and trigger the popup close button; if not found, just hide the overlay
+        const closeBtn = document.getElementById('shPopupClose');
+        if (closeBtn) closeBtn.click();
+        else hideOverlay();
+      });
+    })();
   </script>
 
 </body>

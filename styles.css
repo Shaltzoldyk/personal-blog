@@ -1,6 +1,9 @@
 /* ============================================================
    SHALTZ MODE — TOXIC LIME EDITION (Option A — #b6ff00)
-   Updated for full two-tone layout: RED HEADER + LIME BODY
+   Full stylesheet: theme variables, overlay, hub layout (side cards + rotator),
+   mini-grid, popup, rotator, and responsive rules.
+
+   Updated: removed ".ext-hint" badge (no more "opens" text), kept side-card compact + internal list scroll
    ============================================================ */
 
 /* Toxic Lime + Red theme variables */
@@ -23,11 +26,47 @@
   --popup-border: rgba(20,211,154,0.14);
   --popup-accent: #14d39a;
   --popup-outer-frame: #ffffff;
+
+  /* overlay */
+  --overlay-color: rgba(0,0,0,0.35);
 }
 
 /* Reset baseline */
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; padding: 0; }
+
+/* Utility classes */
+.hidden { display: none !important; }
+
+/* ============================================================
+   PAGE DIM OVERLAY
+   - sits above page content and subtle CRT/noise layers
+   - sits below the popup window (popup has very high z-index)
+   ============================================================ */
+#page-dim-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-color);
+  z-index: 9990;               /* above CRT (999) / body::after (998), under mini-opener (9999) and popup (100000) */
+  pointer-events: none;        /* when hidden, allow clicks through */
+  opacity: 0;
+  transition: opacity 220ms ease;
+  will-change: opacity;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* active state: intercept clicks */
+#page-dim-overlay.visible {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+/* reduced motion safety */
+@media (prefers-reduced-motion: reduce) {
+  #page-dim-overlay { transition: none; }
+}
 
 /* ============================================================
    FULL PAGE LIME BACKGROUND (Option A)
@@ -79,6 +118,24 @@ body {
   font-family: "Courier New", monospace;
   font-size: 13px;
   color: var(--bright-border);
+}
+
+/* small logo tweak (used in header if present) */
+.site-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  vertical-align: middle;
+  margin-right: 10px;
+  border-radius: 6px;
+  border: 2px solid rgba(255,255,255,0.06);
+}
+
+/* ensure the header title and logo align nicely */
+.header-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* ============================================================
@@ -167,6 +224,301 @@ main#main-content {
   background: var(--bright-border);
   box-shadow: 0 0 12px var(--bright-border);
   transform: scale(1.15);
+}
+
+/* ============================================================
+   HUB LAYOUT: side cards + centered rotator
+   - used on desktop / wide screens
+   ============================================================ */
+.hub {
+  max-width: 1100px;
+  margin: 18px auto;
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: 260px 1fr 260px;
+  gap: 18px;
+  align-items: start;
+}
+
+/* left / right stacked cards container */
+.side-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: stretch;
+}
+
+/* generic side-card used in hub
+   NOW: fixed shorter height; content controlled with flex so lists scroll */
+.side-card {
+  background: linear-gradient(180deg, #0a0a0a, #080808);
+  border-radius: 8px;
+  border: 4px solid var(--popup-outer-frame);
+  padding: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  color: #dfe;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+  position: relative;
+
+  /* NEW: fixed shorter height */
+  height: 320px;
+  min-height: 320px;
+  max-height: 320px;
+  overflow: hidden;
+}
+
+/* interactive hover/focus */
+.side-card:focus-within,
+.side-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.6), 0 0 28px rgba(182,255,0,0.06);
+  outline: none;
+}
+
+/* cover area reduced in height to free space for list */
+.side-card .cover {
+  width: 100%;
+  /* Use a fixed cover height to make cards shorter and consistent */
+  height: 120px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: linear-gradient(180deg,#111,#000);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(182,255,0,0.14);
+  flex: 0 0 auto;
+}
+
+.side-card .cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* This is the clickable title inside the card. Only this element is an anchor.
+   Removed extra top margin so title sits tightly under the cover. */
+.side-card .title-link {
+  display: inline-block;
+  margin: 0; /* tightened: no extra space above */
+  margin-top: 6px; /* small breathing but not big */
+  font-family: "Courier New", monospace;
+  font-weight: 700;
+  color: #b6ff00;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgba(0,0,0,0.02);
+}
+
+.side-card .title-link:hover,
+.side-card .title-link:focus {
+  background: rgba(182,255,0,0.03);
+  outline: none;
+  box-shadow: 0 0 18px rgba(182,255,0,0.04);
+}
+
+/* subtitle small line */
+.side-card .sub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.8);
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin: 2px 0 4px 0;
+  flex: 0 0 auto;
+}
+
+/* list of names under each card — now scrolls if content exceeds available area */
+.side-card .item-list {
+  width: 100%;
+  margin: 0;
+  padding: 6px 8px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: start;
+
+  /* NEW: let this area take remaining space and scroll */
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* item link appearance */
+.side-card .item-list li a {
+  color: rgba(255,255,255,0.9);
+  text-decoration: none;
+  font-family: "Courier New", monospace;
+  font-size: 14px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+/* hover / focus visible state for item links */
+.side-card .item-list li a:hover,
+.side-card .item-list li a:focus {
+  color: #fff;
+  background: rgba(182,255,0,0.04);
+  outline: none;
+}
+
+/* styling the internal scrollbar for item-list so it matches the design */
+.side-card .item-list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.side-card .item-list::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.04);
+  border-radius: 8px;
+}
+
+.side-card .item-list::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.2);
+  border-radius: 8px;
+}
+
+/* fallback for firefox */
+.side-card .item-list {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.2) rgba(0,0,0,0.04);
+}
+
+/* center rotator tweaks inside hub */
+.hub-rotator {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* ensure rotator respects available height and is centered visually */
+.hub .rotator-frame {
+  max-width: 100%;
+  border: 4px solid var(--bright-border);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+  transition: width 260ms ease, height 260ms ease;
+  background: #fff4;
+}
+
+/* ============================================================
+   MINI GRID — horizontal scrollable cards (fallback / mobile)
+   ============================================================ */
+/* ... (rest of CSS unchanged) ... */
+
+
+/* ============================================================
+   MINI GRID — horizontal scrollable cards (fallback / mobile)
+   ============================================================ */
+.mini-grid-wrap {
+  max-width: 1100px;
+  margin: 10px auto 28px;
+  padding: 6px 14px;
+}
+
+.mini-grid-title {
+  font-family: "Courier New", monospace;
+  text-align: center;
+  margin: 6px 0 14px;
+  color: #000;
+}
+
+.mini-grid {
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  padding: 12px 6px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  align-items: center;
+  justify-content: center;
+}
+
+.mini-grid::-webkit-scrollbar { height: 10px; }
+.mini-grid::-webkit-scrollbar-track { background: rgba(0,0,0,0.03); border-radius: 8px; }
+.mini-grid::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 8px; }
+
+.mini-card {
+  flex: 0 0 220px;               /* visible card width — adjust if you want larger */
+  scroll-snap-align: center;
+  background: linear-gradient(180deg, #0a0a0a, #080808);
+  border-radius: 8px;
+  border: 4px solid var(--popup-outer-frame);
+  padding: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+  display: inline-flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  text-decoration: none;
+  color: #dfe;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+  position: relative;
+}
+
+.mini-card:focus,
+.mini-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.6), 0 0 28px rgba(182,255,0,0.06);
+  outline: none;
+}
+
+.mini-card .cover {
+  width: 180px;
+  height: 180px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: linear-gradient(180deg,#111,#000);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(182,255,0,0.14);
+}
+
+.mini-card .cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.mini-card .label {
+  font-family: "Courier New", monospace;
+  font-weight: 700;
+  color: var(--bright-border, #b6ff00);
+  text-align: center;
+  font-size: 1rem;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.mini-card .sub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  font-family: Arial, sans-serif;
+}
+
+/* small external link hint */
+.mini-card .ext-hint {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.65);
+  background: rgba(0,0,0,0.2);
+  padding: 3px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(182,255,0,0.06);
 }
 
 /* ============================================================
@@ -454,15 +806,36 @@ body::after {
   color: var(--popup-accent);
 }
 
-/* reduce heavy contrast for very small screens */
-@media (max-width: 640px) {
-  .sh-popup-outer-frame { border-width: 4px; padding: 4px; }
-  .sh-popup-window { padding: 18px; font-size: 15px; max-width: 96vw; }
-}
-
 /* ============================================================
    RESPONSIVE ADJUSTMENTS
    ============================================================ */
+@media (max-width: 1100px) {
+  .hub { grid-template-columns: 220px 1fr 220px; gap: 12px; padding: 0 12px; }
+  .side-card { padding: 10px; }
+}
+
+@media (max-width: 880px) {
+  /* adjust mini-card sizes if used */
+  .mini-card { flex: 0 0 180px; }
+  .mini-card .cover { width: 140px; height: 140px; }
+}
+
+@media (max-width: 860px) {
+  /* stack into single column on small screens: rotator full width, cards below as horizontal scroll */
+  .hub {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+  .side-cards {
+    flex-direction: row;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 8px 0;
+  }
+  .side-card { min-width: 180px; flex: 0 0 180px; height: auto; max-height: none; }
+  .hub-rotator { order: -1; margin-bottom: 8px; }
+}
+
 @media (max-width: 720px) {
   .old-site-title { font-size: 32px; }
   .rotator-frame { width: 92vw !important; }
@@ -473,4 +846,11 @@ body::after {
   #sh-post-popup { inset: 8px; }
   .sh-popup-outer-frame { max-width: 100%; max-height: calc(100% - 16px); }
   .sh-popup-window { max-height: calc(100vh - 32px); padding: 14px; }
+}
+
+@media (max-width: 540px) {
+  .mini-grid { gap: 12px; padding: 10px; }
+  .mini-card { flex: 0 0 150px; padding: 8px; }
+  .mini-card .cover { width: 120px; height: 120px; }
+  .side-card { min-width: 150px; flex: 0 0 150px; height: auto; max-height: none; }
 }
