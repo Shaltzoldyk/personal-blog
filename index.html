@@ -206,6 +206,23 @@
       .hub-rotator { order: -1; margin-bottom: 8px; }
     }
 
+    /* --------------------------
+       Title embedded link (Shaltz) - subtle hover glow
+       Kept minimal and safe so it matches the surrounding title exactly until hovered.
+       -------------------------- */
+    .title-embedded-link {
+      color: #b6ff00;
+      text-decoration: none;
+      transition: text-shadow 0.2s ease, opacity 0.2s ease;
+      cursor: pointer;
+    }
+    .title-embedded-link:hover,
+    .title-embedded-link:focus {
+      text-shadow: 0 0 8px #b6ff00, 0 0 14px #b6ff00;
+      opacity: 1;
+      outline: none;
+    }
+
   </style>
 </head>
 <body>
@@ -214,7 +231,10 @@
   <header class="old-header" role="banner" aria-label="site banner">
     <div class="header-brand">
       <img src="/favicon-32x32.png" alt="site logo" class="site-logo" onerror="this.style.display='none'">
-      <h1 class="old-site-title">Fuck it, Shaltz mode</h1>
+      <div>
+        <h1 class="old-site-title">Fuck it, <a href="https://twitter.com/YouShallWin" class="title-embedded-link" target="_blank" rel="noopener noreferrer">Shaltz</a> mode</h1>
+        <!-- removed separate @YouShallWin line as requested -->
+      </div>
     </div>
     <div class="old-sep" aria-hidden="true"></div>
     <div class="old-marquee" aria-hidden="true">Life is short, go long to hedge</div>
@@ -356,6 +376,14 @@
 
   <!-- CRT overlay for subtle retro feel -->
   <div class="crt-overlay" aria-hidden="true"></div>
+
+  <!-- Floating Twitter/X corner icon (keeps visual subtle and unobtrusive) -->
+  <a href="https://twitter.com/YouShallWin" class="floating-twitter" target="_blank" rel="noopener noreferrer" aria-label="Follow @YouShallWin on X (Twitter)">
+    <!-- SVG icon uses currentColor so it matches the color defined in CSS -->
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false" role="img">
+      <path fill="currentColor" d="M22.46 6c-.77.35-1.6.58-2.46.69a4.28 4.28 0 0 0 1.88-2.36 8.53 8.53 0 0 1-2.7 1.03 4.26 4.26 0 0 0-7.27 3.88A12.09 12.09 0 0 1 3.15 4.6a4.26 4.26 0 0 0 1.32 5.68 4.24 4.24 0 0 1-1.93-.53v.05a4.26 4.26 0 0 0 3.42 4.18c-.48.13-.98.2-1.5.2-.37 0-.73-.04-1.08-.1a4.27 4.27 0 0 0 3.98 2.96A8.55 8.55 0 0 1 2 19.54a12.07 12.07 0 0 0 6.54 1.92c7.86 0 12.16-6.51 12.16-12.16v-.55A8.7 8.7 0 0 0 24 5.13a8.38 8.38 0 0 1-2.37.65z"/>
+    </svg>
+  </a>
 
   <!-- Scripts: player -> post-popup -> pjax (order matters) -->
   <script src="js/player.js" defer></script>

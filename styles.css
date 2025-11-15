@@ -4,6 +4,8 @@
    mini-grid, popup, rotator, and responsive rules.
 
    Updated: removed ".ext-hint" badge (no more "opens" text), kept side-card compact + internal list scroll
+   Added: floating-twitter corner icon styles (keeps aesthetic identical)
+   Added: header-twitter styles for embedded handle in header
    ============================================================ */
 
 /* Toxic Lime + Red theme variables */
@@ -136,6 +138,47 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+}
+
+/* ---------------------------
+   Header Twitter handle styles
+   (for the embedded @YouShallWin under the title)
+   --------------------------- */
+/* Ensure the inner div (title + handle) sits inline with the logo */
+.header-brand > div {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* The subtle handle style — matches site typography and tone */
+.header-twitter {
+  display: inline-block;
+  margin-top: 6px;
+  font-family: "Courier New", monospace;
+  font-size: 13px;
+  color: var(--bright-border);
+  opacity: 0.86;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.02);
+  transition: opacity 180ms ease, transform 160ms ease, box-shadow 160ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Hover/focus reveal — gentle, non-intrusive */
+.header-twitter:hover,
+.header-twitter:focus {
+  opacity: 1;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.45), 0 0 18px rgba(182,255,0,0.04);
+  outline: none;
+  transform: translateY(-2px);
+}
+
+/* small-screen tweak so header doesn't crowd */
+@media (max-width: 540px) {
+  .header-twitter { font-size: 12px; margin-top: 4px; padding: 1px 5px; }
 }
 
 /* ============================================================
@@ -650,6 +693,57 @@ main#main-content {
   color: var(--bright-border);
   padding: 4px 6px;
   cursor: pointer;
+}
+
+/* ============================================================
+   Floating Twitter / X icon (subtle, non-intrusive)
+   - placed near other fixed UI (audio player / mini-opener)
+   - sits above the page-dim overlay but below the popup modal
+   ============================================================ */
+.floating-twitter {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  text-decoration: none;
+  z-index: 9995; /* above page-dim-overlay (9990) but below popup (100000) */
+  cursor: pointer;
+  opacity: 0.48; /* subtle by default */
+  transition: opacity 180ms ease, transform 160ms ease, box-shadow 160ms ease;
+  color: rgba(255,255,255,0.92); /* icon color (matches text tone) */
+  background: rgba(0,0,0,0.18); /* faint backdrop to keep legibility on varied images */
+  border: 1px solid rgba(255,255,255,0.03);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  padding: 6px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* hover/focus: gentle reveal (no change to layout or size) */
+.floating-twitter:hover,
+.floating-twitter:focus {
+  opacity: 1;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 18px rgba(182,255,0,0.03);
+  outline: none;
+}
+
+/* SVG inside should use currentColor (no explicit color declaration needed) */
+.floating-twitter svg { display: block; width: 22px; height: 22px; }
+
+/* slightly reduce size on very small screens so it doesn't obstruct */
+@media (max-width: 420px) {
+  .floating-twitter { right: 12px; bottom: 12px; width: 36px; height: 36px; padding: 4px; opacity: 0.42; }
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .floating-twitter { transition: none; transform: none; }
 }
 
 /* ============================================================
