@@ -5,12 +5,25 @@
  *    injects into the popup, and pushes state via history.pushState().
  *  - Respects modifier keys and target="_blank" (won't intercept those).
  *
+ * Updated behavior:
+ *  - Avoids calling history.back() when closing the popup to prevent PJAX/popstate races.
+ *  - Restores the previous URL/state using history.replaceState() (no popstate event).
+ *  - Saves the previous history state before opening so it can be restored cleanly.
+ *
  * Include with:
- * <script src="post-popup.js" defer></script>
+ * <script src="js/post-popup.js" defer></script>
  */
 
 (function () {
   const POPUP_ID = 'sh-post-popup';
+  const STYLE_ID = 'sh-post-popup-inline-style';
+  let _inited = false;
+  let _clickHandler = null;
+  let _lastActiveElement = null;
+
+  // Saved history info so we can restore without triggering popstate
+  let _previousURL = null;
+  let _previousState = null;
 
   function createPopupDOM() {
     let popup = document.getElementById(POPUP_ID);
@@ -18,35 +31,37 @@
 
     popup = document.createElement('div');
     popup.id = POPUP_ID;
-    popup.className = 'sh-post-popup hidden';
+    popup.className = 'hidden';
     popup.setAttribute('role', 'dialog');
     popup.setAttribute('aria-hidden', 'true');
+    popup.setAttribute('aria-modal', 'true');
     popup.innerHTML = `
       <div class="sh-popup-backdrop" data-popup-close></div>
       <div class="sh-popup-window" role="document" tabindex="-1">
         <div class="sh-popup-topbar">
-          <button class="sh-popup-close" aria-label="Close post">×</button>
+          <button class="sh-popup-close" aria-label="Close post" type="button">×</button>
         </div>
         <div class="sh-popup-body"></div>
       </div>
     `;
-    // Minimal styling to make it usable immediately
-    const styleId = 'sh-post-popup-inline-style';
-    if (!document.getElementById(styleId)) {
+
+    // Minimal inline CSS only if it's not already present (keeps visual even without styles.css)
+    if (!document.getElementById(STYLE_ID)) {
       const s = document.createElement('style');
-      s.id = styleId;
+      s.id = STYLE_ID;
       s.textContent = `
       #${POPUP_ID} { position: fixed; inset: 0; z-index: 99998; display:flex; align-items:center; justify-content:center; }
       #${POPUP_ID}.hidden { display:none; }
-      #${POPUP_ID} .sh-popup-backdrop { position:absolute; inset:0; background: rgba(0,0,0,0.6); backdrop-filter: blur(2px); }
+      #${POPUP_ID} .sh-popup-backdrop { position:absolute; inset:0; background: rgba(0,0,0,0.72); backdrop-filter: blur(2px); }
       #${POPUP_ID} .sh-popup-window { position:relative; width:min(92vw, 900px); max-height:90vh; overflow:auto; background:linear-gradient(180deg,#050505,#0b0b0b); border:2px solid rgba(0,255,102,0.9); box-shadow:0 8px 40px rgba(0,0,0,0.6); padding: 18px; border-radius:6px; color:#e6ffe6; }
       #${POPUP_ID} .sh-popup-topbar { display:flex; justify-content:flex-end; }
       #${POPUP_ID} .sh-popup-close { background:transparent; border:none; color:#00ff66; font-size:20px; cursor:pointer; }
-      #${POPUP_ID} .sh-popup-body { margin-top:8px; }
+      #${POPUP_ID} .sh-popup-body { margin-top:8px; color: #ffffff; }
       `;
       document.head.appendChild(s);
     }
 
+    // Append to body (outside #main-content so PJAX won't remove it)
     document.body.appendChild(popup);
     return popup;
   }
@@ -58,142 +73,224 @@
     } catch (e) { return false; }
   }
 
+  // Only intercept links that are clearly posts: either class "post-link", path contains '/posts/', or endsWith '.html'
   function shouldInterceptLink(a) {
     if (!a || !a.href) return false;
+    // explicit target blank -> let browser handle
     if (a.target && a.target.toLowerCase() === '_blank') return false;
-    // If modifier keys used, don't intercept (let user open in new tab)
-    // (event handler will check modifiers, but extra safety here)
-    // Intercept only same-origin and likely post URLs: either contain "/posts/" or endWith ".html"
+    // explicit download attribute -> let browser handle
+    if (a.hasAttribute('download')) return false;
+    // explicit external rel -> don't intercept
+    if (String(a.rel || '').toLowerCase().split(/\s+/).includes('external')) return false;
     if (!isSameOrigin(a.href)) return false;
-    const u = new URL(a.href, location.href);
-    const path = u.pathname;
-    if (path.includes('/posts/') || path.endsWith('.html')) return true;
+
+    // If the author explicitly opts out with data-no-popup or class 'no-popup', don't intercept
+    if (a.hasAttribute('data-no-popup') || a.classList.contains('no-popup')) return false;
+
+    // If link has explicit class 'post-link', treat it as intended for popup
+    if (a.classList.contains('post-link')) return true;
+
+    // Otherwise, check path heuristics
+    try {
+      const u = new URL(a.href, location.href);
+      const path = u.pathname || '';
+      if (path.includes('/posts/') || path.endsWith('.html')) return true;
+    } catch (e) {
+      // ignore
+    }
     return false;
   }
 
   // Extract the main post content from fetched document
   function extractPostContent(doc) {
-    // Prioritize common selectors
     const selectors = [
       '#main-content',
       '.post-container',
       '.blog-post',
       'article',
       '.post-article',
-      '.post'
+      '.post',
+      '.entry-content',
+      '#content'
     ];
     for (const s of selectors) {
       const el = doc.querySelector(s);
       if (el) return el;
     }
-    // Fallback: return body content
+    // fallback to body clone
     return doc.body.cloneNode(true);
   }
 
-  function showPopupWithContent(htmlContent, url) {
+  function showPopupWithContent(htmlNode, url) {
     const popup = createPopupDOM();
-    const body = popup.querySelector('.sh-popup-body');
-    body.innerHTML = ''; // clear
-    body.appendChild(htmlContent);
+    const bodyEl = popup.querySelector('.sh-popup-body');
 
-    // aria + visible
+    // store previously focused element to restore focus on close
+    try { _lastActiveElement = document.activeElement; } catch (e) { _lastActiveElement = null; }
+
+    bodyEl.innerHTML = '';
+    // move node into popup (clone to avoid removing from source doc if necessary)
+    const toInsert = htmlNode.cloneNode(true);
+    // remove scripts from inserted content for safety
+    toInsert.querySelectorAll && toInsert.querySelectorAll('script').forEach(s => s.remove());
+    bodyEl.appendChild(toInsert);
+
     popup.classList.remove('hidden');
     popup.setAttribute('aria-hidden', 'false');
 
-    // focus management
+    // focus management: focus the window for screen readers
     const win = popup.querySelector('.sh-popup-window');
-    win.focus();
+    try { win.focus(); } catch (e) {}
 
-    // pushState so URL reflects opened post
+    // Save the previous URL and state BEFORE pushing the popup state.
+    try {
+      _previousURL = location.href;
+      _previousState = history.state;
+    } catch (e) {
+      _previousURL = null;
+      _previousState = null;
+    }
+
+    // push history state so back button closes popup
     try {
       history.pushState({ sh_post_popup: true }, '', url);
-    } catch (e) {}
+    } catch (e) {
+      // ignore on older browsers or if blocked
+      console.warn('history.pushState failed', e);
+    }
 
-    // dispatch event
     document.dispatchEvent(new CustomEvent('sh:popup-open', { detail: { url } }));
   }
 
-  function closePopup(replaceUrl) {
+  function closePopup(useHistoryRestore) {
     const popup = document.getElementById(POPUP_ID);
     if (!popup) return;
     popup.classList.add('hidden');
     popup.setAttribute('aria-hidden', 'true');
-    // clear content
-    const body = popup.querySelector('.sh-popup-body');
-    body.innerHTML = '';
 
-    // If replaceUrl provided, manipulate history to restore previous URL
-    if (replaceUrl === true) {
-      // go back in history (popstate will fire)
-      history.back();
-    } else if (typeof replaceUrl === 'string') {
-      history.replaceState(null, '', replaceUrl);
+    const bodyEl = popup.querySelector('.sh-popup-body');
+    if (bodyEl) bodyEl.innerHTML = '';
+
+    // restore focus
+    try {
+      if (_lastActiveElement && typeof _lastActiveElement.focus === 'function') {
+        _lastActiveElement.focus();
+      } else {
+        // fallback focus to body
+        document.body.focus && document.body.focus();
+      }
+    } catch (e) { /* ignore */ }
+    _lastActiveElement = null;
+
+    // If requested, restore previous URL/state WITHOUT triggering popstate.
+    if (useHistoryRestore === true) {
+      try {
+        if (_previousURL !== null) {
+          // Replace current history entry (post URL) with the previous one,
+          // restoring the previous state object. This avoids firing popstate.
+          history.replaceState(_previousState, '', _previousURL);
+        } else {
+          // if we don't have previous URL/state, fallback to a gentle no-op;
+          // avoid calling history.back() to prevent PJAX/popstate races.
+        }
+      } catch (e) {
+        console.warn('history.replaceState failed', e);
+      } finally {
+        // clear saved values
+        _previousURL = null;
+        _previousState = null;
+      }
     }
 
     document.dispatchEvent(new CustomEvent('sh:popup-close'));
   }
 
-  function initLinkHandlers() {
-    // Delegate clicks on document
-    document.addEventListener('click', async (ev) => {
-      // Only handle left-clicks without modifier keys
-      if (ev.defaultPrevented) return;
-      if (ev.button !== 0) return; // not left click
-      if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return; // let user open in new tab
-      let anchor = ev.target;
-      while (anchor && anchor.tagName !== 'A') anchor = anchor.parentElement;
-      if (!anchor) return;
-      if (!shouldInterceptLink(anchor)) return;
+  // Delegated click handler for document-level interception
+  function _documentClickHandler(ev) {
+    if (ev.defaultPrevented) return;
 
-      // At this point we will intercept and open popup (unless it's a plain listing link you want full nav for)
-      ev.preventDefault();
+    // If it's not a left button click, allow default (middle-click opens new tab, right-click shows context menu)
+    // ev.button: 0 = left, 1 = middle, 2 = right
+    if (ev.button !== 0) return;
 
-      const href = anchor.href;
-      try {
-        // show a temporary loader - simply an empty popup with "loading"
-        const popup = createPopupDOM();
-        const body = popup.querySelector('.sh-popup-body');
-        body.innerHTML = '<div style="padding:12px;font-family:Courier,monospace;">Loading…</div>';
-        popup.classList.remove('hidden');
-        popup.setAttribute('aria-hidden', 'false');
+    // Respect modifier keys — if user used ctrl/cmd/shift/alt, let browser handle (open new tab/window)
+    if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
 
-        const res = await fetch(href, { method: 'GET', credentials: 'same-origin' });
+    // find anchor
+    let el = ev.target;
+    while (el && el.nodeType === 1 && el.tagName !== 'A') el = el.parentElement;
+    if (!el || el.tagName !== 'A') return;
+
+    // if clicked inside the popup, ignore (let popup handlers manage)
+    const popup = document.getElementById(POPUP_ID);
+    if (popup && popup.contains(el)) return;
+
+    if (!shouldInterceptLink(el)) return;
+
+    ev.preventDefault();
+    const href = el.href;
+
+    // Show a loader quickly
+    const created = createPopupDOM();
+    const bodyEl = created.querySelector('.sh-popup-body');
+    bodyEl.innerHTML = '<div style="padding:14px;font-family:Courier,monospace;">Loading…</div>';
+    created.classList.remove('hidden');
+    created.setAttribute('aria-hidden', 'false');
+
+    // Fetch and extract content
+    fetch(href, { method: 'GET', credentials: 'same-origin' })
+      .then(res => {
         if (!res.ok) throw new Error('fetch-fail');
-
-        const text = await res.text();
+        return res.text();
+      })
+      .then(text => {
         const parser = new DOMParser();
         const doc = parser.parseFromString(text, 'text/html');
         const contentEl = extractPostContent(doc);
         if (!contentEl) throw new Error('no-content');
 
-        // clone node so we can insert safely
+        // clone and sanitize (remove script tags)
         const clone = contentEl.cloneNode(true);
-        // sanitize: remove script tags inside cloned content (scripts will not run)
         clone.querySelectorAll && clone.querySelectorAll('script').forEach(s => s.remove());
 
         showPopupWithContent(clone, href);
-        // notify other scripts that a post was loaded into popup
         document.dispatchEvent(new CustomEvent('sh:popup-loaded', { detail: { url: href } }));
-      } catch (err) {
-        // on error fallback to normal navigation
-        console.warn('Post popup failed, navigating normally', err);
-        location.href = href;
-      }
-    });
+      })
+      .catch(err => {
+        console.warn('Post popup failed, falling back to navigation', err);
+        // fallback to full navigation
+        try {
+          window.location.href = href;
+        } catch (e) {
+          console.error('Navigation fallback failed', e);
+        }
+      });
+  }
+
+  function initLinkHandlers() {
+    // ensure we only attach one global handler
+    if (_inited && _clickHandler) return;
+
+    _clickHandler = _documentClickHandler;
+    document.addEventListener('click', _clickHandler);
   }
 
   function initPopupCloseHandlers() {
     const popup = createPopupDOM();
 
-    // close button
+    // close on close-button or backdrop
     popup.addEventListener('click', (ev) => {
-      if (ev.target.matches('.sh-popup-close') || ev.target.hasAttribute('data-popup-close')) {
+      const target = ev.target;
+      if (!target) return;
+      // matches close button or backdrop attribute
+      if (target.matches('.sh-popup-close') || target.hasAttribute('data-popup-close') || target.closest('.sh-popup-backdrop')) {
         ev.preventDefault();
+        // restore history/state without triggering popstate handling in PJAX
         closePopup(true);
       }
     });
 
-    // Escape key closes popup
+    // ESC to close
     window.addEventListener('keydown', (ev) => {
       if (ev.key === 'Escape') {
         const p = document.getElementById(POPUP_ID);
@@ -203,41 +300,66 @@
       }
     });
 
-    // Handle popstate: if history indicates we are returning to a previous state, close popup
+    // popstate: if state does not indicate the popup, close it
     window.addEventListener('popstate', (ev) => {
-      // if state is not our popup state, ensure popup is closed
+      const state = ev.state || {};
       const p = document.getElementById(POPUP_ID);
-      if (!ev.state || !ev.state.sh_post_popup) {
+      if (!state.sh_post_popup) {
         if (p && !p.classList.contains('hidden')) {
-          // close without modifying history (we're handling popstate)
+          // close without changing history (we're reacting to popstate)
           p.classList.add('hidden');
           p.setAttribute('aria-hidden', 'true');
-          p.querySelector('.sh-popup-body').innerHTML = '';
+          const bodyEl = p.querySelector('.sh-popup-body');
+          if (bodyEl) bodyEl.innerHTML = '';
           document.dispatchEvent(new CustomEvent('sh:popup-close'));
+          // restore focus when closing via popstate
+          try {
+            if (_lastActiveElement && typeof _lastActiveElement.focus === 'function') {
+              _lastActiveElement.focus();
+            } else {
+              document.body.focus && document.body.focus();
+            }
+          } catch (e) {}
+          _lastActiveElement = null;
         }
       } else {
-        // if state says it's our popup, leave it open (or handle re-open)
+        // Optionally re-open or keep open — no-op
       }
     });
   }
 
-  // Init routine
+  // Public init
   function init() {
+    if (_inited) return;
     createPopupDOM();
     initLinkHandlers();
     initPopupCloseHandlers();
-    // Expose small API
+
+    // small API for other scripts
     window.__SHALTZ_POST_POPUP = {
       openWithHTMLNode: (node, url) => showPopupWithContent(node, url),
       close: () => closePopup(true)
     };
+
+    _inited = true;
     document.dispatchEvent(new CustomEvent('sh:post-popup-ready'));
   }
 
-  // Run on DOM ready
+  // initialize on DOM ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
+
+  // Also listen for a PJAX/replace event to ensure the popup DOM exists and handlers are still in place.
+  // Common custom events: 'pjax:complete', 'pjax:load', but we'll listen generically for 'pjax:complete' and 'pjax:loaded'
+  ['pjax:complete', 'pjax:loaded', 'pjax:end'].forEach(evName => {
+    document.addEventListener(evName, () => {
+      // ensure popup DOM exists after PJAX swap
+      createPopupDOM();
+      // handlers are delegated, so no need to rebind click listener
+    });
+  });
+
 })();

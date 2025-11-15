@@ -1,204 +1,299 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>dik mode</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fuck it, Shaltz mode</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <h1 class="site-title">Fuck it, Shaltz mode</h1>
+
+  <!-- Bright top banner -->
+  <header class="old-header" role="banner" aria-label="site banner">
+    <h1 class="old-site-title">Fuck it, Shaltz mode</h1>
+    <div class="old-sep" aria-hidden="true"></div>
+    <div class="old-marquee" aria-hidden="true">Life is short, go long to hedge</div>
+  </header>
 
   <!-- main-content is the PJAX replace target -->
-  <main id="main-content">
-    <div class="collage-frame">
-      <div class="collage-row">
-        <!-- images stay the same; script will make them interactive -->
-        <img src="images/luck.jpeg" class="collage-img" alt="luck">
-        <img src="images/get-a-load.jpeg" class="collage-img" alt="get a load">
-        <img src="images/hellyah.jpeg" class="collage-img" alt="hellyah">
-        <img src="images/gojo.jpeg" class="collage-img" alt="gojo">
-        <img src="images/music-listernoor.jpeg" class="collage-img" alt="music">
-        <img src="images/teleport.jpeg" class="collage-img" alt="teleport">
-        <img src="images/wolf.jpeg" class="collage-img" alt="wolf">
-        <img src="images/toji-gojo.jpeg" class="collage-img" alt="toji gojo">
-        <img src="images/one-life.jpeg" class="collage-img" alt="one life">
-      </div>
-    </div>
+  <main id="main-content" role="main">
 
-    <div class="post-list">
+    <!-- Rotator (single-image carousel) -->
+    <section class="rotator-wrap" aria-live="polite" aria-label="image rotator">
+      <div class="rotator-inner">
+        <button class="rot-btn rot-prev" aria-label="Previous image" type="button">◀</button>
+
+        <!-- frame that will be sized dynamically by JS -->
+        <div class="rotator-frame" id="rotFrame" role="group" aria-roledescription="image frame" aria-label="Rotating images">
+          <img id="rotator" src="images/luck.jpeg" alt="rotating image" />
+        </div>
+
+        <button class="rot-btn rot-next" aria-label="Next image" type="button">▶</button>
+      </div>
+
+      <div class="rot-dots" id="rotDots" aria-hidden="false" aria-label="image indicators"></div>
+    </section>
+
+    <!-- Centered post list -->
+    <section class="post-list centered" aria-label="posts">
       <h2 class="post-heading">Tried thinking, this is what I came up with:</h2>
       <ul>
-        <!-- add .post-link so the popup handler recognizes these -->
-        <li><a href="posts/trade-framework.html" class="neon-link post-link">The trade framework</a></li>
-        <li><a href="posts/doom-part1.html" class="neon-link post-link">Doom Part 1</a></li>
+        <!-- post-link class required by post-popup.js; data-title used for popup header -->
+        <li><a href="posts/trade-framework.html" class="neon-link post-link" data-title="The Future Is a Trade">The trade framework</a></li>
+        <li><a href="posts/doom-part1.html" class="neon-link post-link" data-title="Doom — Part 1">Doom Part 1</a></li>
       </ul>
-    </div>
+    </section>
+
   </main>
 
-  <!-- Mini-opener template (created once and reused) -->
-  <div id="mini-opener" class="mini-opener hidden" role="dialog" aria-hidden="true">
-    <div class="mini-bar" id="miniBar" aria-label="Image window drag bar">
-      <button class="mini-close" id="miniClose" aria-label="Close window">&times;</button>
+  <!-- Mini-opener (keeps small visual control if the player/popup interact) -->
+  <div id="mini-opener" class="mini-opener hidden" role="dialog" aria-hidden="true" aria-label="mini opener">
+    <div class="mini-bar" id="miniBar" aria-hidden="false">
+      <button class="mini-close" id="miniClose" aria-label="Close mini opener" type="button">&times;</button>
     </div>
     <div class="mini-content" id="miniContent">
-      <img src="" alt="" id="miniImage">
+      <img src="" alt="" id="miniImage" />
     </div>
   </div>
 
-  <!-- Post popup and player DOM will be created by JS if missing -->
-  <!-- Include scripts site-wide (adjust paths if you place them elsewhere) -->
+  <!-- Post popup overlay (ensures posts open in popup with black backdrop) -->
+  <div id="sh-post-popup" class="hidden" role="dialog" aria-hidden="true" aria-modal="true" aria-label="Post content">
+    <div class="sh-popup-backdrop" id="shPopupBackdrop" tabindex="-1" data-close="backdrop"></div>
+
+    <div class="sh-popup-outer-frame" id="shPopupOuter" role="document" aria-live="polite">
+      <div class="sh-popup-window">
+        <div class="sh-popup-topbar">
+          <button class="sh-popup-close" id="shPopupClose" aria-label="Close post">&times;</button>
+        </div>
+
+        <div class="sh-popup-body" id="shPopupBody" tabindex="0">
+          <!-- fetched post HTML will be injected here -->
+          <div class="sh-popup-loading" id="shPopupLoading">loading…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Terminal-style footer -->
+  <footer class="sh-terminal" role="contentinfo" aria-label="site terminal">
+    <div class="line">user@shaltz:~$ echo "i love you anon, never kys"</div>
+    <div class="line">links: [ <a class="neon-link post-link" href="posts/trade-framework.html" data-title="The Future Is a Trade">trade-framework</a> ]  [ <a class="neon-link post-link" href="posts/doom-part1.html" data-title="Doom — Part 1">doom-part1</a> ]</div>
+  </footer>
+
+  <!-- CRT overlay for subtle retro feel -->
+  <div class="crt-overlay" aria-hidden="true"></div>
+
+  <!-- Scripts: player -> post-popup -> pjax (order matters) -->
   <script src="js/player.js" defer></script>
   <script src="js/post-popup.js" defer></script>
   <script src="js/pjax.js" defer></script>
 
-  <!-- existing inline image-opener script (unchanged) -->
+  <!-- Rotator script (sizes frame automatically, shows full images, pauses on hover)
+       Updated to expose a re-init function and avoid duplicate handlers when PJAX replaces content.
+  -->
   <script>
-    (function () {
-      const opener = document.getElementById('mini-opener');
-      const miniImage = document.getElementById('miniImage');
-      const miniClose = document.getElementById('miniClose');
-      const miniBar = document.getElementById('miniBar');
+  (function () {
+    // Image list
+    const rotImgs = [
+      'images/luck.jpeg',
+      'images/get-a-load.jpeg',
+      'images/hellyah.jpeg',
+      'images/gojo.jpeg',
+      'images/music-listernoor.jpeg',
+      'images/teleport.jpeg',
+      'images/wolf.jpeg',
+      'images/toji-gojo.jpeg',
+      'images/one-life.jpeg'
+    ];
 
-      // Apply random rotations to collage images (keeps your scattered vibe)
-      const imgs = document.querySelectorAll('.collage-img');
-      imgs.forEach((img) => {
-        const r = (Math.random() * 6 - 3).toFixed(2); // -3deg .. +3deg
-        img.style.transform = `rotate(${r}deg)`;
-        img.style.cursor = 'pointer';
+    const AUTO_MS = 3000;
+
+    // State that survives re-inits (on window so PJAX-replaced pages can call)
+    window.__SHALTZ_ROTATOR = window.__SHALTZ_ROTATOR || {};
+    const R = window.__SHALTZ_ROTATOR;
+
+    // Initialize defaults if not present
+    if (!R.inited) {
+      R.rotIndex = 0;
+      R.rotTimer = null;
+      R.initializedOnce = false;
+    }
+
+    // DOM refs (may change after PJAX swaps)
+    function getEls() {
+      return {
+        rot: document.getElementById('rotator'),
+        frame: document.getElementById('rotFrame'),
+        dotsContainer: document.getElementById('rotDots'),
+        btnNext: document.querySelector('.rot-next'),
+        btnPrev: document.querySelector('.rot-prev')
+      };
+    }
+
+    function clearPrevious() {
+      // stop timer
+      if (R.rotTimer) {
+        clearInterval(R.rotTimer);
+        R.rotTimer = null;
+      }
+      // remove dots (so we can rebuild)
+      const els = getEls();
+      if (els.dotsContainer) {
+        els.dotsContainer.innerHTML = '';
+      }
+      // remove visible class from image (if exists)
+      if (els.rot) {
+        els.rot.classList.remove('visible');
+      }
+      // remove any previous event listeners by replacing buttons (simple safe approach)
+      // (replaceNode isn't necessary; we just rebind event handlers below)
+    }
+
+    function buildDots() {
+      const els = getEls();
+      if (!els.dotsContainer) return;
+      els.dotsContainer.innerHTML = '';
+      rotImgs.forEach((_, i) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'rot-dot';
+        b.dataset.index = i;
+        b.title = 'Go to image ' + (i+1);
+        b.addEventListener('click', () => { show(i); resetTimer(); });
+        els.dotsContainer.appendChild(b);
       });
+    }
 
-      // Utility: detect mobile small screens
-      function isSmallScreen() {
-        return window.matchMedia('(pointer: coarse) and (max-width: 720px)').matches ||
-               window.innerWidth < 720;
+    function highlightDot(i) {
+      const els = getEls();
+      if (!els.dotsContainer) return;
+      const dots = els.dotsContainer.querySelectorAll('.rot-dot');
+      dots.forEach((d, idx) => d.classList.toggle('active', idx === i));
+    }
+
+    function sizeFrameToImage(img) {
+      const els = getEls();
+      if (!els.frame || !img.naturalWidth || !img.naturalHeight) return;
+      const ratio = img.naturalWidth / img.naturalHeight;
+
+      const maxWidthPx = Math.min(window.innerWidth * 0.88, 720);
+      const maxHeightPx = Math.min(window.innerHeight * 0.55, 520);
+
+      let desiredWidth = Math.min(maxWidthPx, img.naturalWidth || maxWidthPx);
+      let desiredHeight = desiredWidth / ratio;
+
+      if (desiredHeight > maxHeightPx) {
+        desiredHeight = maxHeightPx;
+        desiredWidth = desiredHeight * ratio;
       }
 
-      // Open the mini-opener. If nearPos supplied, place near that rect; otherwise center.
-      function openMini(src, alt, nearRect) {
-        miniImage.src = src;
-        miniImage.alt = alt || '';
-        opener.classList.remove('hidden');
-        opener.setAttribute('aria-hidden', 'false');
+      els.frame.style.width = Math.round(desiredWidth) + 'px';
+      els.frame.style.height = Math.round(desiredHeight) + 'px';
+    }
 
-        // Place near clicked image for desktop; center on small screens
-        if (!isSmallScreen() && nearRect) {
-          // compute an offset so it appears slightly above/right
-          const OFFSET_X = 20;
-          const OFFSET_Y = -10;
-          let left = nearRect.right + OFFSET_X;
-          let top = nearRect.top + OFFSET_Y;
+    function show(i) {
+      R.rotIndex = (i + rotImgs.length) % rotImgs.length;
+      const els = getEls();
+      if (!els.rot) return;
 
-          // If it would go off-screen to the right, position to the left of the image
-          const vw = window.innerWidth;
-          const openerW = Math.min(520, vw - 40); // same as CSS max-width
-          if (left + openerW > vw - 10) {
-            left = Math.max(10, nearRect.left - openerW - OFFSET_X);
-          }
+      // hide for transition
+      els.rot.classList.remove('visible');
 
-          // If top goes above viewport, clamp
-          top = Math.max(10, top);
+      const preload = new Image();
+      preload.src = rotImgs[R.rotIndex];
+      preload.onload = function () {
+        // size frame to the new image
+        sizeFrameToImage(preload);
 
-          opener.style.left = left + 'px';
-          opener.style.top = top + 'px';
-          opener.style.transform = 'scale(1) rotate(' + (Math.random()*2 -1).toFixed(2) + 'deg)';
-        } else {
-          // Center for small screens or if no rect
-          opener.style.left = '50%';
-          opener.style.top = '50%';
-          opener.style.transform = 'translate(-50%, -50%) rotate(' + (Math.random()*2 -1).toFixed(2) + 'deg)';
-        }
+        // set src and fade in
+        els.rot.src = preload.src;
+        els.rot.alt = 'image ' + (R.rotIndex + 1);
+
+        // trigger visible class after a reflow
+        void els.rot.offsetWidth;
+        els.rot.classList.add('visible');
+
+        highlightDot(R.rotIndex);
+      };
+
+      // defensive: if preload fails to load quickly, ensure the frame doesn't stay empty forever
+      preload.onerror = function () {
+        // keep previous image if any, otherwise clear visible class
+        highlightDot(R.rotIndex);
+      };
+    }
+
+    function next() { show(R.rotIndex + 1); }
+    function prev() { show(R.rotIndex - 1); }
+
+    function resetTimer() {
+      if (R.rotTimer) clearInterval(R.rotTimer);
+      R.rotTimer = setInterval(next, AUTO_MS);
+    }
+
+    // Public init that can be called after PJAX swaps
+    function init() {
+      // Defensive cleanup if re-running
+      clearPrevious();
+
+      const els = getEls();
+
+      buildDots();
+      show(0);
+      resetTimer();
+
+      // Bind next/prev (rebind each time safely)
+      if (els.btnNext) {
+        // remove previous listener by cloning to avoid duplicates
+        const n = els.btnNext.cloneNode(true);
+        els.btnNext.parentNode.replaceChild(n, els.btnNext);
+        n.addEventListener('click', () => { next(); resetTimer(); });
+      }
+      if (els.btnPrev) {
+        const p = els.btnPrev.cloneNode(true);
+        els.btnPrev.parentNode.replaceChild(p, els.btnPrev);
+        p.addEventListener('click', () => { prev(); resetTimer(); });
       }
 
-      function closeMini() {
-        opener.classList.add('hidden');
-        opener.setAttribute('aria-hidden', 'true');
-        miniImage.src = '';
-      }
+      // pause on hover
+      const rotWrap = document.querySelector('.rotator-wrap');
+      rotWrap && rotWrap.addEventListener('mouseenter', () => clearInterval(R.rotTimer));
+      rotWrap && rotWrap.addEventListener('mouseleave', resetTimer);
 
-      // Click handlers: images open the mini-opener
-      imgs.forEach(img => {
-        img.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const rect = img.getBoundingClientRect();
-          openMini(img.src, img.alt, rect);
-        });
+      R.inited = true;
+      R.initializedOnce = true;
+
+      // expose for debugging/testing
+      window.__SHALTZ_ROTATOR.instance = {
+        init,
+        show,
+        next,
+        prev,
+        resetTimer
+      };
+    }
+
+    // Initialize on DOM ready, and re-init on PJAX lifecycle events
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+
+    // Re-init after PJAX loads/replaces content so the rotator is always bound
+    ['pjax:complete', 'pjax:loaded', 'pjax:end'].forEach(ev => {
+      document.addEventListener(ev, () => {
+        try { init(); } catch (e) { console.warn('rotator re-init failed', e); }
       });
+    });
 
-      // Close on clicking close button
-      miniClose.addEventListener('click', (e) => {
-        e.stopPropagation();
-        closeMini();
-      });
+    // Also ensure the rotator re-inits when popup closes (defensive)
+    document.addEventListener('sh:popup-close', () => {
+      try { init(); } catch (e) {}
+    });
 
-      // Close when clicking outside the opener
-      document.addEventListener('click', (e) => {
-        if (opener.classList.contains('hidden')) return;
-        if (!opener.contains(e.target)) closeMini();
-      });
-
-      // ESC closes
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeMini();
-      });
-
-      // Make the mini window draggable by the top bar (desktop only)
-      (function makeDraggable() {
-        let isDragging = false;
-        let startX = 0, startY = 0, origLeft = 0, origTop = 0;
-
-        miniBar.addEventListener('pointerdown', (ev) => {
-          // Only drag on non-touch small screens? We allow pointer-based dragging
-          isDragging = true;
-          miniBar.setPointerCapture(ev.pointerId);
-          startX = ev.clientX;
-          startY = ev.clientY;
-
-          // If opener is positioned via translate(-50%,-50%), compute current offset
-          const style = getComputedStyle(opener);
-          const left = parseFloat(style.left);
-          const top = parseFloat(style.top);
-
-          origLeft = isNaN(left) ? 0 : left;
-          origTop = isNaN(top) ? 0 : top;
-
-          // if opener centered via 50% left/top, convert to pixels baseline
-          if (style.left.includes('%')) {
-            // place at center in pixels then start drag from center
-            const vw = window.innerWidth;
-            const vh = window.innerHeight;
-            const el = opener.getBoundingClientRect();
-            origLeft = vw/2 - el.width/2;
-            origTop = vh/2 - el.height/2;
-            opener.style.left = origLeft + 'px';
-            opener.style.top = origTop + 'px';
-            opener.style.transform = 'none';
-          }
-
-          ev.preventDefault();
-        });
-
-        window.addEventListener('pointermove', (ev) => {
-          if (!isDragging) return;
-          const dx = ev.clientX - startX;
-          const dy = ev.clientY - startY;
-          opener.style.left = (origLeft + dx) + 'px';
-          opener.style.top = (origTop + dy) + 'px';
-        });
-
-        window.addEventListener('pointerup', (ev) => {
-          if (!isDragging) return;
-          isDragging = false;
-          try { miniBar.releasePointerCapture(ev.pointerId); } catch (e) {}
-        });
-      })();
-
-      // Respect reduced-motion (no spawn scale if user prefers reduced motion)
-      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (prefersReduced) {
-        opener.classList.add('reduced-motion');
-      }
-    })();
+  })();
   </script>
+
 </body>
 </html>
