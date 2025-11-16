@@ -1,8 +1,8 @@
 /**
- * player.js (updated)
- *  - Adds a volume slider and mute/unmute button to the 90s pixel player.
- *  - Persists volume & mute state in localStorage.
- *  - Adds a safe toggle() method and exposes alias window.ShaltzPlayer for compatibility
+ * player.js (mobile sync update)
+ *  - Keeps original player behavior (playlist, volume, persistence).
+ *  - Wires mobile bar UI (mm-play button and mm-title) so they reflect real player state.
+ *  - Defensive: works if mobile controls are absent; re-wires after PJAX events.
  *
  * Include with: <script src="js/player.js" defer></script>
  */
@@ -120,21 +120,25 @@
       });
     }
 
-    function setTrack(index, autoPlay = false) {
-      index = (index + playlist.length) % playlist.length;
-      currentIndex = index;
-      const filename = playlist[currentIndex];
-      audio.src = srcFor(filename);
-      titleEl.textContent = filename;
-      // set volume/mute when source loads
-      audio.addEventListener('loadedmetadata', () => {
-        applyVolume();
-      }, { once: true });
-      if (autoPlay && userInteracted) {
-        audio.play().catch(()=>{});
+    function updateTitleUI() {
+      // update desktop title element
+      try { titleEl.textContent = playlist[currentIndex] || ''; } catch (e) {}
+      // update mobile title (if present)
+      const mmTitle = document.querySelector('.mobile-music-bar .mm-title');
+      if (mmTitle) {
+        mmTitle.textContent = playlist[currentIndex] || 'Music';
       }
-      updateButtons();
-      persist();
+    }
+
+    function updateMobileButton(stateIsPlaying) {
+      const mmPlay = document.getElementById('mm-play');
+      if (!mmPlay) return;
+      try {
+        mmPlay.textContent = stateIsPlaying ? '❚❚' : '▶';
+        mmPlay.setAttribute('aria-pressed', stateIsPlaying ? 'true' : 'false');
+        // toggle a small active class for styling if exists
+        mmPlay.classList.toggle('mm-playing', !!stateIsPlaying);
+      } catch (e) {}
     }
 
     function updateButtons() {
@@ -147,6 +151,10 @@
       }
       btnMute.textContent = isMuted || audio.muted ? '🔇' : (currentVolume > 0.6 ? '🔊' : (currentVolume > 0.2 ? '🔉' : '🔈'));
       volSlider.value = String(currentVolume.toFixed(2));
+
+      // update mobile play/pause UI as well
+      updateMobileButton(isPlaying && !audio.paused);
+      updateTitleUI();
     }
 
     function applyVolume() {
@@ -238,6 +246,7 @@
         audio.play().catch(()=>{});
       }
       updateButtons();
+      updateTitleUI();
     });
 
     // Keyboard support
@@ -267,6 +276,25 @@
     volSlider.value = String(currentVolume.toFixed(2));
     applyVolume();
 
+    function setTrack(index, autoPlay = false) {
+      index = (index + playlist.length) % playlist.length;
+      currentIndex = index;
+      const filename = playlist[currentIndex];
+      audio.src = srcFor(filename);
+      // update immediate UI feedback
+      try { titleEl.textContent = filename; } catch (e) {}
+      updateTitleUI();
+      // set volume/mute when source loads
+      audio.addEventListener('loadedmetadata', () => {
+        applyVolume();
+      }, { once: true });
+      if (autoPlay && userInteracted) {
+        audio.play().catch(()=>{});
+      }
+      updateButtons();
+      persist();
+    }
+
     // initialize track
     setTrack(currentIndex, false);
 
@@ -277,7 +305,6 @@
 
     // Provide a safe toggle method for play/pause (used by mobile UI)
     function _togglePlay() {
-      // If audio is currently playing (not paused), pause; else play.
       try {
         if (!audio.src) {
           setTrack(currentIndex, false);
@@ -298,6 +325,7 @@
       } catch (e) { /* defensive */ }
     }
 
+    // Expose and return the player API
     return {
       el: dom,
       audio,
@@ -309,7 +337,10 @@
       toggleMute: () => { isMuted = !isMuted; applyVolume(); persist(); },
       getState: () => ({ index: currentIndex, isPlaying, currentTime: audio.currentTime || 0, volume: currentVolume, muted: isMuted }),
       // new compatibility method
-      toggle: _togglePlay
+      toggle: _togglePlay,
+      // internal helpers (exposed for defensive external listeners)
+      _updateButtons: updateButtons,
+      _updateTitleUI: updateTitleUI
     };
   }
 
@@ -323,42 +354,88 @@
     console.warn('Player initialization failed', e);
   }
 
-  // Auto-wire mobile mm-play button if present (non-destructive)
-  function wireMobilePlayButton() {
+  // MOBILE SYNC: wire mobile mm-play and mm-title to reflect player state
+  function wireMobileUI() {
     try {
       const mm = document.getElementById('mm-play');
-      if (!mm) return;
-      // Avoid double-binding
-      if (mm.dataset.__shWire) return;
-      mm.dataset.__shWire = '1';
-      mm.addEventListener('click', (ev) => {
-        ev.preventDefault();
-        // If player is ready, toggle playback; otherwise fallback to opening Spotify link
-        if (window.__SHALTZ_PLAYER && typeof window.__SHALTZ_PLAYER.toggle === 'function') {
+      const mmTitle = document.querySelector('.mobile-music-bar .mm-title');
+
+      // If mobile elements are absent, nothing to wire
+      if (!mm && !mmTitle) return;
+
+      const player = window.__SHALTZ_PLAYER;
+      if (!player) return;
+
+      // helper to sync (safe)
+      function syncUI() {
+        try {
+          const st = player.getState();
+          // mm title
+          if (mmTitle) mmTitle.textContent = playlist[st.index] || 'Music — tap to open';
+          // mm play icon
+          if (mm) mm.textContent = st.isPlaying ? '❚❚' : '▶';
+          if (mm) mm.setAttribute('aria-pressed', st.isPlaying ? 'true' : 'false');
+          if (mm) mm.classList.toggle('mm-playing', !!st.isPlaying);
+        } catch (e) { /* ignore sync errors */ }
+      }
+
+      // Wire click to toggle playback (keeps fallback behavior from earlier code)
+      if (mm && !mm.dataset.__shWire) {
+        mm.dataset.__shWire = '1';
+        mm.addEventListener('click', (ev) => {
+          ev.preventDefault();
           try {
-            window.__SHALTZ_PLAYER.toggle();
-            return;
-          } catch (e) { /* fallback below */ }
+            if (window.__SHALTZ_PLAYER && typeof window.__SHALTZ_PLAYER.toggle === 'function') {
+              window.__SHALTZ_PLAYER.toggle();
+            } else {
+              window.open('https://open.spotify.com/user/shalvin.rautela', '_blank', 'noopener');
+            }
+          } catch (err) {
+            // fallback: open spotify
+            window.open('https://open.spotify.com/user/shalvin.rautela', '_blank', 'noopener');
+          } finally {
+            // schedule a sync shortly after click (player state may change)
+            setTimeout(syncUI, 220);
+          }
+        });
+      }
+
+      // initial sync
+      setTimeout(syncUI, 60);
+
+      // react to player events: play, pause, track change
+      try {
+        const audio = player.audio;
+        if (audio) {
+          audio.addEventListener('play', syncUI);
+          audio.addEventListener('pause', syncUI);
+          audio.addEventListener('loadedmetadata', syncUI);
+          audio.addEventListener('ended', syncUI);
         }
-        // Fallback: open Spotify profile (do not attempt autoplay)
-        window.open('https://open.spotify.com/user/shalvin.rautela', '_blank', 'noopener');
-      });
-    } catch (e) { /* silent */ }
+      } catch (e) { /* ignore */ }
+
+      // also listen to custom ready event (in case player created after)
+      document.addEventListener('sh:player-ready', syncUI);
+
+    } catch (e) {
+      // don't break page if mobile wiring fails
+      console.warn('mobile UI wire failed', e);
+    }
+  }
+
+  // Run wiring on DOM ready and after PJAX events (defensive)
+  function initMobileWire() {
+    try { wireMobileUI(); } catch (e) {}
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      wireMobilePlayButton();
-    });
+    document.addEventListener('DOMContentLoaded', initMobileWire);
   } else {
-    wireMobilePlayButton();
+    initMobileWire();
   }
 
-  // Also wire again after PJAX events (defensive)
   ['pjax:loaded', 'pjax:complete', 'pjax:end'].forEach(ev => {
-    document.addEventListener(ev, () => {
-      wireMobilePlayButton();
-    });
+    document.addEventListener(ev, initMobileWire);
   });
 
 })();

@@ -191,8 +191,11 @@ main#main-content {
   align-items: center;
   gap: 6px;
   justify-content: center; /* ensure controls/dots center when possible */
+  /* make rotator-inner the positioning context for overlayed prev/next on mobile */
+  position: relative;
 }
 
+/* Frame defaults (desktop-friendly) */
 .rotator-frame {
   display: flex;
   align-items: center;
@@ -205,6 +208,7 @@ main#main-content {
   transition: width 260ms ease, height 260ms ease;
 }
 
+/* Default image behaviour (desktop) */
 .rotator-frame img#rotator {
   width: 100%;
   height: 100%;
@@ -220,7 +224,7 @@ main#main-content {
   transform: scale(1);
 }
 
-/* Prev/Next */
+/* Prev/Next (desktop defaults) */
 .rot-btn {
   background: rgba(0,0,0,0.7);
   border: 1px dashed var(--bright-border);
@@ -891,6 +895,8 @@ body::after {
 
 /* ============================================================
    MOBILE-ONLY ENHANCEMENTS (ADDED BY MERGE)
+   - Option B: Side-cards removed on mobile (only accordion visible)
+   - Tight mobile alignment fixes
    ============================================================ */
 .mobile-only { display: none !important; }
 
@@ -902,97 +908,9 @@ body::after {
   /* Stack the hub into a single column without touching desktop rules */
   .hub { grid-template-columns: 1fr !important; padding: 0 12px; gap:12px; }
 
-  /* Side-cards become horizontal scroll list for space efficiency */
-  .side-cards { flex-direction: row !important; overflow-x: auto; gap:12px; padding:8px 0; }
-  .side-card { min-width:180px; flex:0 0 180px; height:auto !important; max-height:none !important; overflow:visible; }
-
-  /* Rotator reduced size on phones */
-  .rotator-frame { width: 92vw !important; max-width: 720px !important; height: auto !important; margin: 18px auto !important; }
-
-  /* Center the rotator wrapper so prev/next and dots line up centered */
-  .rotator-wrap { display:flex; justify-content:center; align-items:center; }
-  .rotator-inner { justify-content: center !important; } /* ensure inner row centers */
-
-  /* Popup: make it fill screen comfortably on mobile but keep desktop popup unchanged */
-  #sh-post-popup.mobile-fullscreen { position: fixed; inset: 0; z-index: 1500; display: block; }
-  #sh-post-popup.mobile-fullscreen .sh-popup-outer-frame {
-    width: 100%; height: 100%; border-radius: 0; padding: 0; max-width: 100%; max-height: 100%;
-  }
-  #sh-post-popup.mobile-fullscreen .sh-popup-window {
-    width: 100%; height: 100%; max-width: 100%; max-height: 100%; border-radius: 0; padding: 14px; box-sizing: border-box;
-    display: flex; flex-direction: column; overflow: hidden;
-  }
-  #sh-post-popup.mobile-fullscreen .sh-popup-body {
-    overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px; flex: 1 1 auto;
-  }
-  #sh-post-popup.mobile-fullscreen .sh-popup-topbar { padding: 8px; position: sticky; top: 0; background: transparent; z-index: 10; }
-
-  /* Recommendations accordion (mobile only) - use native details/summary for accessibility */
-  .mobile-recs { margin: 12px 0; padding: 0 6px; }
-  .mobile-recs details {
-    background: linear-gradient(180deg,#0b0b0b,#070707);
-    border-radius: 8px;
-    margin-bottom: 8px;
-    padding: 8px;
-    border: 2px solid rgba(182,255,0,0.06);
-  }
-  .mobile-recs summary {
-    list-style: none;
-    cursor: pointer;
-    font-weight: 700;
-    font-family: "Courier New", monospace;
-    color: rgba(182,255,0,1);
-    padding: 6px 4px;
-    outline: none;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    font-size: 16px;
-  }
-  .mobile-recs summary::marker { display: none; }
-  .mobile-recs summary::after {
-    content: "▾";
-    font-size: 14px;
-    color: rgba(255,255,255,0.8);
-    transform: rotate(0deg);
-    transition: transform 160ms ease;
-  }
-  .mobile-recs details[open] summary::after { transform: rotate(180deg); }
-
-  .mobile-recs .rec-list { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
-  .mobile-recs .rec-list a { text-decoration: none; font-family: Arial, sans-serif; color: #fff; font-size: 14px; padding: 6px 8px; border-radius: 6px; background: rgba(255,255,255,0.02); display: block; }
-
-  .mobile-recs summary:focus { box-shadow: 0 6px 18px rgba(0,0,0,0.4); border-radius: 6px; outline: none; }
-
-  /* Compact sticky music bar (mobile only) */
-  .mobile-music-bar {
-    position: fixed; left: 12px; right: 12px; bottom: 14px; z-index: 1200;
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    padding: 8px 10px; border-radius: 12px;
-    background: linear-gradient(180deg, rgba(0,0,0,0.92), rgba(0,0,0,0.85));
-    border: 1px solid rgba(182,255,0,0.06); box-shadow: 0 8px 28px rgba(0,0,0,0.6);
-  }
-  .mobile-music-bar .mm-title { font-size: 14px; color: #fff; font-family: Arial, sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .mobile-music-bar button { background: none; border: none; color: rgba(182,255,0,1); font-size: 16px; padding: 8px; min-width: 44px; min-height: 44px; border-radius: 8px; }
-
-  /* increase tappable areas globally on mobile for buttons/links that are interactive */
-  button, .title-link, .rot-btn, .mini-close, .sh-popup-close, .floating-twitter { touch-action: manipulation; }
-  a, button { -webkit-tap-highlight-color: rgba(182,255,0,0.06); }
-
-  /* ensure rotator controls are reachable */
-  .rot-btn { padding: 10px 14px; min-width: 44px; min-height: 44px; }
-
-  /* reduced motion preference */
-  @media (prefers-reduced-motion: reduce) {
-    .rotator-frame, .mobile-recs details, .mobile-music-bar, .rot-btn { transition: none !important; }
-  }
-
-  /* ============================================================
-     HIDING THE FOUR SPECIFIC CARDS (Music / Books / Articles / Movies)
-     - This is the only change requested: remove those "I like" cards
-       from the mobile view while preserving everything else.
-     ============================================================ */
+  /* We intentionally hide the specific side-cards on mobile (Option B).
+     This removes the left/right "I like" cards entirely so only the accordion
+     controls (mobile-recs) are visible at the top. */
   [aria-labelledby="music-title"],
   [aria-labelledby="books-title"],
   [aria-labelledby="articles-title"],
@@ -1000,16 +918,99 @@ body::after {
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
+    width: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
     overflow: hidden !important;
+    border: 0 !important;
   }
 
-  /* ============================================================
-     HEADER ALIGNMENT FIXES (mobile only) — ensure left border/logo visible
-     ============================================================ */
+  /* If any containers become empty after hiding the cards, ensure they don't force layout gaps.
+     Specifically collapse .side-cards when they contain only hidden cards. */
+  .side-cards:empty,
+  .side-cards:has([aria-labelledby="music-title"][style*="display: none"]),
+  .side-cards:has([aria-labelledby="books-title"][style*="display: none"]),
+  .side-cards:has([aria-labelledby="articles-title"][style*="display: none"]),
+  .side-cards:has([aria-labelledby="movies-title"][style*="display: none"]) {
+    display: none !important;
+  }
+
+  /* Rotator reduced size on phones and centered */
+  .rotator-frame { width: 92vw !important; max-width: 720px !important; height: auto !important; margin: 18px auto !important; }
+  .rotator-wrap { display:flex; justify-content:center; align-items:center; }
+  .rotator-inner { justify-content: center !important; align-items:center !important; padding: 0 6px; box-sizing: border-box; position: relative; }
+
+  /* === NEW MOBILE ROTATOR ALIGNMENT RULES (fix misalignment) ===
+     - Force the image to center optically inside the frame
+     - Overlay prev/next buttons inside the frame so they don't push layout
+     - Reduce heavy shadow and ensure margin:auto fallback
+  */
+  .rotator-frame {
+    /* keep frame sizing controlled by JS, but ensure it centers */
+    margin-left: auto !important;
+    margin-right: auto !important;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.32) !important;
+    position: relative; /* to allow internal overlay controls if needed */
+    overflow: visible; /* allow shadow/controls to be visible without clipping */
+  }
+
+  /* Image behavior on mobile: don't stretch the image to the full container width.
+     Instead let JS set the frame size and keep the image centered using object-fit.
+     This avoids visual left-padding when the natural image contains white space. */
+  .rotator-frame img#rotator {
+    width: auto !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    object-fit: contain !important;
+    object-position: center center !important;
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    background: #ffffff; /* ensure image canvas reads correctly against lime */
+  }
+
+  /* Overlay prev/next buttons so they sit inside the frame, vertically centered */
+  .rot-prev, .rot-next {
+    position: absolute !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: rgba(0,0,0,0.06) !important;
+    border: 0 !important;
+    color: var(--bright-border) !important;
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 10px !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.28) !important;
+    cursor: pointer !important;
+    z-index: 12 !important;
+  }
+  .rot-prev { left: calc(50% - 46vw); /* visually nudge inside the left edge of the frame */ }
+  .rot-next { right: calc(50% - 46vw); /* visually nudge inside the right edge of the frame */ }
+
+  /* Note: the left/right calc uses 46vw because the frame width is ~92vw — this keeps buttons flush inside.
+     It's defensive and works across a range of phone widths without touching desktop rules. */
+
+  /* center dots under the rotator */
+  .rot-dots { display:flex; justify-content:center; gap:8px; margin-top: 10px; }
+
+  /* remove any accidental horizontal scrolling caused by extreme shadows or wide elements */
+  html, body { overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+
+  /* reduce heavy shadows on small screens so elements read lighter and center visually */
+  .rotator-frame { box-shadow: 0 8px 20px rgba(0,0,0,0.32); }
+  .side-card { box-shadow: 0 8px 18px rgba(0,0,0,0.32); }
+
+  /* ensure post-list has space to avoid overlap with sticky music bar */
+  .post-list.centered { padding-bottom: 84px; }
+
+  /* header left-edge fix — ensure paddings don't clip on many phones */
   .old-header {
-    padding-left: 16px !important; /* increased to avoid left clipping on many phones */
+    padding-left: 16px !important;
     padding-right: 12px !important;
     box-shadow: 0 6px 20px rgba(0,0,0,0.3);
   }
@@ -1017,10 +1018,21 @@ body::after {
     max-width: 100% !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
-    box-sizing: border-box; /* ensure padding calculations are stable */
+    box-sizing: border-box;
   }
-  .site-logo {
-    margin-left: 0 !important;
+  .site-logo { margin-left: 0 !important; }
+
+  /* Popup topbar sticky to keep close always accessible when keyboard / music bar present */
+  #sh-post-popup.mobile-fullscreen .sh-popup-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1600;
+    background: linear-gradient(transparent, rgba(0,0,0,0.05));
+  }
+
+  /* reduced motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    .rotator-frame, .mobile-recs details, .mobile-music-bar, .rot-btn { transition: none !important; }
   }
 }
 

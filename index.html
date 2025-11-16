@@ -284,6 +284,119 @@
          The targeted hiding of the four "I like" cards is handled in styles.css via aria-labelledby,
          so we intentionally keep this inline block non-destructive.
       */
+
+      /* ---------------------------
+         ADDITIONAL MOBILE ALIGNMENT FIXES
+         These rules target the specific issues you reported:
+         - banner left-edge cropping
+         - carousel centering & arrows
+         - horizontal overflow
+         - mobile music/player overlap
+         - consistent spacing
+         --------------------------- */
+
+      /* ensure header sits inside viewport with comfortable padding (fixes left-edge cropping) */
+      .old-header {
+        padding: 12px;
+        margin: 8px 8px 0 8px;
+        box-sizing: border-box;
+        max-width: calc(100% - 16px);
+        border-radius: 6px;
+        background-clip: padding-box;
+      }
+
+      /* keep site title compact on phones */
+      .old-site-title {
+        font-size: 20px;
+        line-height: 1.05;
+        margin: 0;
+        letter-spacing: 0.4px;
+      }
+
+      /* center rotator inner content and avoid offset issues */
+      .rotator-inner {
+        justify-content: center;
+        align-items: center;
+        padding: 0 6px;
+        box-sizing: border-box;
+      }
+
+      /* ensure the frame is horizontally centered and visually lighter on phones */
+      .rotator-frame {
+        margin-left: auto !important;
+        margin-right: auto !important;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+      }
+
+      /* style arrow buttons so they sit inside the visible region and don't overlap awkwardly */
+      .rot-btn {
+        background: rgba(0,0,0,0.06);
+        border: none;
+        padding: 8px 10px;
+        border-radius: 8px;
+        font-size: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: none;
+        min-width: 44px;
+        min-height: 44px;
+      }
+      .rot-prev { margin-right: 8px; }
+      .rot-next { margin-left: 8px; }
+
+      /* center dots under the rotator neatly */
+      .rot-dots {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      /* remove any accidental horizontal scrolling caused by extreme shadows or wide elements */
+      html, body {
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      /* tweak side-cards padding on phones (they become horizontal scroller) */
+      .side-cards {
+        padding-left: 6px;
+        padding-right: 6px;
+      }
+
+      /* reduce the footprint of the sticky music bar so it doesn't visually crowd the lower content */
+      .mobile-music-bar {
+        padding: 8px 10px;
+        bottom: 10px;
+        left: 8px;
+        right: 8px;
+      }
+
+      /* lower z-index for some common external floating players so our controlled mobile bar sits above them.
+         These class names are defensive — they won't affect desktop and won't break if absent. */
+      .player, .audio-player, .floating-player, audio {
+        z-index: 1050 !important;
+      }
+
+      /* adjust post-list spacing and ensure it doesn't sit under the music bar */
+      .post-list.centered {
+        padding: 0 12px 72px; /* larger bottom padding to avoid overlap with sticky bar */
+      }
+
+      /* make popup topbar sticky so close button remains accessible */
+      #sh-post-popup.mobile-fullscreen .sh-popup-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 1600;
+        background: linear-gradient(transparent, rgba(0,0,0,0.05));
+      }
+
+      /* ensure interactive elements are comfortably tappable */
+      .title-link, .mobile-music-bar button, .rot-btn {
+        touch-action: manipulation;
+      }
+
     }
 
     /* small accessibility hint: reduce motion for users who prefer reduced motion */
@@ -316,7 +429,7 @@
     <div class="mobile-only" aria-hidden="false">
       <div class="mobile-recs" aria-label="Mobile recommendations - Books, Articles, Movies, Music">
         <details id="m-books">
-          <summary>Books</summary>
+          <summary>Books I like</summary>
           <div class="rec-list" aria-hidden="false">
             <!-- mirrored from desktop book list (shortened for mobile) -->
             <a href="https://www.goodreads.com/book/show/placeholder1" target="_blank" rel="noopener noreferrer">Book 1 — (tap to open)</a>
@@ -327,7 +440,7 @@
         </details>
 
         <details id="m-articles">
-          <summary>Articles</summary>
+          <summary>Articles I like</summary>
           <div class="rec-list" aria-hidden="false">
             <a href="https://oldcoinbad.com/p/long-degeneracy" target="_blank" rel="noopener noreferrer">Long Degeneracy — Jez</a>
             <a href="https://0xltr.substack.com/p/what-could-go-right" target="_blank" rel="noopener noreferrer">What could go right? - LTR</a>
@@ -336,7 +449,7 @@
         </details>
 
         <details id="m-movies">
-          <summary>Movies</summary>
+          <summary>Movies I like</summary>
           <div class="rec-list" aria-hidden="false">
             <a href="https://letterboxd.com/film/wild-strawberries/" target="_blank" rel="noopener noreferrer">Wild strawberries</a>
             <a href="https://letterboxd.com/film/fight-club/" target="_blank" rel="noopener noreferrer">Fight club</a>
@@ -345,7 +458,7 @@
         </details>
 
         <details id="m-music">
-          <summary>Music</summary>
+          <summary>Music I like</summary>
           <div class="rec-list" aria-hidden="false">
             <a href="https://open.spotify.com/user/shalvin.rautela" target="_blank" rel="noopener noreferrer">Spotify — full list</a>
             <a href="https://open.spotify.com/album/3b4E89rxzZQ9zkhgKpj8N4?si=QZJ4BwTaQiqXg8sVBaARcg" target="_blank" rel="noopener noreferrer">Animals — Pink Floyd</a>
@@ -515,6 +628,7 @@
   <!-- Rotator script (sizes frame automatically, shows full images, pauses on hover)
        Updated to expose a re-init function and avoid duplicate handlers when PJAX replaces content.
        Added a small JS fallback that forces centering (margin:auto) on mobile after size changes.
+       Additionally: compute button positions in pixels for mobile so arrows sit inside the frame.
   -->
   <script>
   (function () {
@@ -570,6 +684,17 @@
       if (els.rot) {
         els.rot.classList.remove('visible');
       }
+      // clear inline button positioning that may have been applied previously
+      if (els.btnPrev) {
+        els.btnPrev.style.left = '';
+        els.btnPrev.style.right = '';
+        els.btnPrev.style.position = '';
+      }
+      if (els.btnNext) {
+        els.btnNext.style.left = '';
+        els.btnNext.style.right = '';
+        els.btnNext.style.position = '';
+      }
     }
 
     function buildDots() {
@@ -594,9 +719,10 @@
       dots.forEach((d, idx) => d.classList.toggle('active', idx === i));
     }
 
+    // Returns an object {w:width, h:height} or null
     function sizeFrameToImage(img) {
       const els = getEls();
-      if (!els.frame || !img.naturalWidth || !img.naturalHeight) return;
+      if (!els.frame || !img.naturalWidth || !img.naturalHeight) return null;
       const ratio = img.naturalWidth / img.naturalHeight;
 
       const maxWidthPx = Math.min(window.innerWidth * 0.88, 720);
@@ -612,6 +738,54 @@
 
       els.frame.style.width = Math.round(desiredWidth) + 'px';
       els.frame.style.height = Math.round(desiredHeight) + 'px';
+
+      // ensure box-sizing and centering for robustness
+      els.frame.style.boxSizing = 'border-box';
+      els.frame.style.marginLeft = 'auto';
+      els.frame.style.marginRight = 'auto';
+
+      return { w: Math.round(desiredWidth), h: Math.round(desiredHeight) };
+    }
+
+    function positionButtonsInsideFrame(frameSize) {
+      // Only run on mobile-sized viewports to avoid desktop changes
+      try {
+        if (!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches)) return;
+        const els = getEls();
+        if (!els.frame) return;
+        const prev = els.btnPrev;
+        const next = els.btnNext;
+        if (!prev || !next) return;
+
+        // compute left edge of centered frame
+        const winW = window.innerWidth;
+        const frameW = frameSize && frameSize.w ? frameSize.w : els.frame.getBoundingClientRect().width;
+        const leftEdge = Math.max(0, Math.round((winW - frameW) / 2));
+
+        // measure button width (fallback to 48)
+        const btnRect = prev.getBoundingClientRect();
+        const btnW = Math.round(btnRect.width) || 48;
+        const offsetMargin = 8; // small inset from frame edge
+
+        // position prev absolutely inside the viewport so it sits visually flush
+        prev.style.position = 'absolute';
+        prev.style.top = '50%';
+        prev.style.transform = 'translateY(-50%)';
+        prev.style.left = (leftEdge + offsetMargin) + 'px';
+        prev.style.right = 'auto';
+        prev.style.zIndex = '12';
+
+        // position next at the right edge inside the frame
+        next.style.position = 'absolute';
+        next.style.top = '50%';
+        next.style.transform = 'translateY(-50%)';
+        next.style.left = (leftEdge + frameW - btnW - offsetMargin) + 'px';
+        next.style.right = 'auto';
+        next.style.zIndex = '12';
+      } catch (e) {
+        // swallow any errors — this is only a nicety for mobile alignment
+        console.warn('positionButtonsInsideFrame failed', e);
+      }
     }
 
     function show(i) {
@@ -625,12 +799,35 @@
       const preload = new Image();
       preload.src = rotImgs[R.rotIndex];
       preload.onload = function () {
-        // size frame to the new image
-        sizeFrameToImage(preload);
+        // size frame to the new image and get computed size
+        const frameSize = sizeFrameToImage(preload);
 
-        // set src and fade in
-        els.rot.src = preload.src;
-        els.rot.alt = 'image ' + (R.rotIndex + 1);
+        // set img attributes and ensure object-fit/position for mobile
+        try {
+          els.rot.src = preload.src;
+          els.rot.alt = 'image ' + (R.rotIndex + 1);
+          if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) {
+            els.rot.style.objectFit = 'contain';
+            els.rot.style.objectPosition = 'center center';
+            els.rot.style.width = 'auto';
+            els.rot.style.height = '100%';
+            els.rot.style.display = 'block';
+            els.rot.style.marginLeft = 'auto';
+            els.rot.style.marginRight = 'auto';
+            // ensure parent is flex-centered
+            if (els.frame && els.frame.parentElement) {
+              els.frame.parentElement.style.display = 'flex';
+              els.frame.parentElement.style.justifyContent = 'center';
+              els.frame.parentElement.style.alignItems = 'center';
+            }
+          } else {
+            // desktop defaults
+            els.rot.style.width = '';
+            els.rot.style.height = '';
+            els.rot.style.objectFit = '';
+            els.rot.style.objectPosition = '';
+          }
+        } catch (e) { /* ignore */ }
 
         // trigger visible class after a reflow
         void els.rot.offsetWidth;
@@ -638,28 +835,24 @@
 
         highlightDot(R.rotIndex);
 
-        // === JS fallback to force centering on mobile (requested) ===
-        // Some devices/JS sizing combos can leave the frame offset; force a margin auto
-        // and ensure the rotator-inner uses center justification. This runs only on small viewports.
+        // Mobile JS fallback centering & button placement
         try {
           if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) {
+            // frame margins were set in sizeFrameToImage, but force a tiny vertical margin too
             if (els.frame && els.frame.style) {
-              els.frame.style.marginLeft = 'auto';
-              els.frame.style.marginRight = 'auto';
-              // small vertical margin for spacing on phones
               els.frame.style.marginTop = els.frame.style.marginTop || '18px';
               els.frame.style.marginBottom = els.frame.style.marginBottom || '18px';
             }
-            if (els.frame && els.frame.parentElement) {
-              els.frame.parentElement.style.justifyContent = 'center';
-              els.frame.parentElement.style.display = 'flex';
-            }
+            // explicitly position previous/next inside the frame using absolute pixels
+            positionButtonsInsideFrame(frameSize);
+          } else {
+            // clear any mobile absolute positioning if present
+            if (els.btnPrev) { els.btnPrev.style.position = ''; els.btnPrev.style.left = ''; els.btnPrev.style.right = ''; els.btnPrev.style.transform = ''; }
+            if (els.btnNext) { els.btnNext.style.position = ''; els.btnNext.style.left = ''; els.btnNext.style.right = ''; els.btnNext.style.transform = ''; }
           }
         } catch (e) {
-          // fallback: ignore errors — centering is a nicety not critical
           console.warn('rotator mobile centering fallback failed', e);
         }
-        // === end fallback ===
       };
 
       // defensive: if preload fails to load quickly, ensure the frame doesn't stay empty forever
@@ -706,6 +899,21 @@
       rotWrap && rotWrap.addEventListener('mouseenter', () => clearInterval(R.rotTimer));
       rotWrap && rotWrap.addEventListener('mouseleave', resetTimer);
 
+      // also reposition buttons on orientation change / resize for mobile
+      function handleResize() {
+        try {
+          const preloadImg = new Image();
+          preloadImg.src = rotImgs[R.rotIndex];
+          preloadImg.onload = function () {
+            const size = sizeFrameToImage(preloadImg);
+            positionButtonsInsideFrame(size);
+          };
+        } catch (e) {}
+      }
+      window.removeEventListener('resize', R._resizeHandler || (() => {}));
+      R._resizeHandler = debounce(handleResize, 140);
+      window.addEventListener('resize', R._resizeHandler);
+
       R.inited = true;
       R.initializedOnce = true;
 
@@ -716,6 +924,15 @@
         next,
         prev,
         resetTimer
+      };
+    }
+
+    // tiny debounce helper
+    function debounce(fn, ms) {
+      let t = null;
+      return function () {
+        clearTimeout(t);
+        t = setTimeout(() => fn.apply(this, arguments), ms);
       };
     }
 
