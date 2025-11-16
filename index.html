@@ -208,7 +208,6 @@
 
     /* --------------------------
        Title embedded link (Shaltz) - subtle hover glow
-       Kept minimal and safe so it matches the surrounding title exactly until hovered.
        -------------------------- */
     .title-embedded-link {
       color: #b6ff00;
@@ -221,6 +220,75 @@
       text-shadow: 0 0 8px #b6ff00, 0 0 14px #b6ff00;
       opacity: 1;
       outline: none;
+    }
+
+    /* --------------------------
+       MOBILE-ONLY: basic scaffolding (non-destructive)
+       - Hidden by default; shown only under the mobile media query below.
+       - Minimal styles here so desktop is untouched. I'll add more refined styles in styles.css next.
+       -------------------------- */
+    .mobile-only { display: none !important; }
+
+    /* ============================
+       MOBILE SCOPED OVERRIDES
+       - Keep this minimal and non-destructive.
+       - Do NOT hide .hub, .post-list, .sh-terminal, etc. (that caused the issue).
+       ============================ */
+    @media (max-width: 768px) {
+      /* show mobile-only elements on small screens only */
+      .mobile-only { display: block !important; }
+
+      /* mild layout stacking for small screens without hiding desktop blocks */
+      .hub { padding: 0 12px; gap: 12px; grid-template-columns: 1fr; }
+
+      /* recommendations accordion default reset */
+      .mobile-recs { margin: 12px 0; padding: 0 6px; }
+      .mobile-recs details { background: linear-gradient(180deg,#0b0b0b,#070707); border-radius: 8px; margin-bottom: 8px; padding: 8px; border: 2px solid rgba(182,255,0,0.06); }
+      .mobile-recs summary { list-style: none; cursor: pointer; font-weight: 700; font-family: "Courier New", monospace; color: #b6ff00; padding: 6px 4px; outline: none; }
+      .mobile-recs details[open] summary { box-shadow: 0 8px 22px rgba(0,0,0,0.4); }
+      .mobile-recs .rec-list { margin-top: 8px; display:flex; flex-direction:column; gap:8px; }
+      .mobile-recs .rec-list a { text-decoration:none; font-family: Arial, sans-serif; color: #fff; font-size: 14px; padding: 6px 8px; border-radius: 6px; background: rgba(255,255,255,0.02); }
+
+      /* compact sticky music bar for phones */
+      .mobile-music-bar {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: 14px;
+        z-index: 1200;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 10px;
+        border-radius: 12px;
+        background: linear-gradient(180deg, rgba(0,0,0,0.9), rgba(0,0,0,0.8));
+        border: 1px solid rgba(182,255,0,0.06);
+        box-shadow: 0 8px 28px rgba(0,0,0,0.6);
+      }
+      .mobile-music-bar button { background: none; border: none; color: #b6ff00; font-size: 16px; padding: 8px; min-width:44px; min-height:44px; border-radius:8px; }
+      .mobile-music-bar .mm-title { font-size: 14px; color: #fff; font-family: Arial, sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+      /* Make popup fill the viewport on mobile for comfortable reading */
+      #sh-post-popup.mobile-fullscreen { position: fixed; inset: 0; z-index: 1500; display: block; }
+      #sh-post-popup.mobile-fullscreen .sh-popup-outer-frame { height: 100vh; width: 100vw; display:flex; align-items:stretch; justify-content:center; padding: 12px; box-sizing: border-box; }
+      #sh-post-popup.mobile-fullscreen .sh-popup-window { width: 100%; max-width: 100%; border-radius: 12px; height: 100%; display:flex; flex-direction: column; overflow: hidden; }
+      #sh-post-popup.mobile-fullscreen .sh-popup-body { overflow-y: auto; padding: 18px; -webkit-overflow-scrolling: touch; }
+      #sh-post-popup .sh-popup-topbar { display:flex; justify-content:flex-end; padding:8px; }
+
+      /* reduce rotator size on narrow phones */
+      .rotator-frame { width: 92vw !important; max-width: 740px; height: auto !important; }
+
+      /* IMPORTANT: Do NOT hide the hub/post-list/terminal here.
+         The destructive rules that removed everything were the cause of your mobile break.
+         The targeted hiding of the four "I like" cards is handled in styles.css via aria-labelledby,
+         so we intentionally keep this inline block non-destructive.
+      */
+    }
+
+    /* small accessibility hint: reduce motion for users who prefer reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .mobile-recs details, .mobile-music-bar, .rotator-frame { transition: none !important; }
     }
 
   </style>
@@ -243,6 +311,50 @@
   <!-- main-content is the PJAX replace target -->
   <main id="main-content" role="main">
 
+    <!-- MOBILE-ONLY: compact recommendations (accordion-style) -->
+    <!-- This block is intentionally mobile-only; it's hidden on desktop by CSS above -->
+    <div class="mobile-only" aria-hidden="false">
+      <div class="mobile-recs" aria-label="Mobile recommendations - Books, Articles, Movies, Music">
+        <details id="m-books">
+          <summary>Books</summary>
+          <div class="rec-list" aria-hidden="false">
+            <!-- mirrored from desktop book list (shortened for mobile) -->
+            <a href="https://www.goodreads.com/book/show/placeholder1" target="_blank" rel="noopener noreferrer">Book 1 — (tap to open)</a>
+            <a href="https://www.goodreads.com/book/show/placeholder2" target="_blank" rel="noopener noreferrer">Book 2</a>
+            <a href="https://www.goodreads.com/book/show/placeholder3" target="_blank" rel="noopener noreferrer">Book 3</a>
+            <a href="https://www.goodreads.com/book/show/placeholder4" target="_blank" rel="noopener noreferrer">Book 4</a>
+          </div>
+        </details>
+
+        <details id="m-articles">
+          <summary>Articles</summary>
+          <div class="rec-list" aria-hidden="false">
+            <a href="https://oldcoinbad.com/p/long-degeneracy" target="_blank" rel="noopener noreferrer">Long Degeneracy — Jez</a>
+            <a href="https://0xltr.substack.com/p/what-could-go-right" target="_blank" rel="noopener noreferrer">What could go right? - LTR</a>
+            <a href="https://vitalik.eth.limo/general/2024/04/01/dc.html" target="_blank" rel="noopener noreferrer">Degen communism - Vitalik</a>
+          </div>
+        </details>
+
+        <details id="m-movies">
+          <summary>Movies</summary>
+          <div class="rec-list" aria-hidden="false">
+            <a href="https://letterboxd.com/film/wild-strawberries/" target="_blank" rel="noopener noreferrer">Wild strawberries</a>
+            <a href="https://letterboxd.com/film/fight-club/" target="_blank" rel="noopener noreferrer">Fight club</a>
+            <a href="https://letterboxd.com/film/persona/" target="_blank" rel="noopener noreferrer">Persona</a>
+          </div>
+        </details>
+
+        <details id="m-music">
+          <summary>Music</summary>
+          <div class="rec-list" aria-hidden="false">
+            <a href="https://open.spotify.com/user/shalvin.rautela" target="_blank" rel="noopener noreferrer">Spotify — full list</a>
+            <a href="https://open.spotify.com/album/3b4E89rxzZQ9zkhgKpj8N4?si=QZJ4BwTaQiqXg8sVBaARcg" target="_blank" rel="noopener noreferrer">Animals — Pink Floyd</a>
+            <a href="https://open.spotify.com/album/77CZUF57sYqgtznUe3OikQ?si=Yq5ZQOrzT6GcRkvg_b5Mdw" target="_blank" rel="noopener noreferrer">I love my computer - Ninajirachi</a>
+          </div>
+        </details>
+      </div>
+    </div>
+
     <!-- HUB: left cards (2) + center rotator + right cards (2) -->
     <section class="hub" aria-label="Featured">
 
@@ -251,7 +363,7 @@
         <!-- Music (left-top) — cover removed, title now sits at top -->
         <div class="side-card" aria-labelledby="music-title" style="height:320px; min-height:320px; max-height:320px;">
           <!-- clickable title only -->
-          <a id="music-title" class="title-link" href="https://open.spotify.com/user/shalvin.rautela" target="_blank" rel="noopener noreferrer">Music</a>
+          <a id="music-title" class="title-link" href="https://open.spotify.com/user/shalvin.rautela" target="_blank" rel="noopener noreferrer">Music I like</a>
           
 
           <!-- editable list: replace items below with your names and links -->
@@ -265,7 +377,7 @@
 
         <!-- Books (left-bottom) — cover removed -->
         <div class="side-card" aria-labelledby="books-title" style="height:320px; min-height:320px; max-height:320px;">
-          <a id="books-title" class="title-link" href="https://www.goodreads.com/user/show/137269621-shaltz" target="_blank" rel="noopener noreferrer">Books</a>
+          <a id="books-title" class="title-link" href="https://www.goodreads.com/user/show/137269621-shaltz" target="_blank" rel="noopener noreferrer">Books I like</a>
           
 
           <!-- editable book list -->
@@ -300,7 +412,7 @@
       <div class="side-cards" aria-hidden="false">
         <!-- Articles (right-top) — cover removed -->
         <div class="side-card" aria-labelledby="articles-title" style="height:320px; min-height:320px; max-height:320px;">
-          <a id="articles-title" class="title-link" href="/articles.html" target="_blank" rel="noopener noreferrer">Articles</a>
+          <a id="articles-title" class="title-link" href="/articles.html" target="_blank" rel="noopener noreferrer">Articles I like</a>
           
 
           <!-- editable article list -->
@@ -313,7 +425,7 @@
 
         <!-- Movies (right-bottom) — cover removed -->
         <div class="side-card" aria-labelledby="movies-title" style="height:320px; min-height:320px; max-height:320px;">
-          <a id="movies-title" class="title-link" href="https://letterboxd.com/Shaltzzz/" target="_blank" rel="noopener noreferrer">Movies</a>
+          <a id="movies-title" class="title-link" href="https://letterboxd.com/Shaltzzz/" target="_blank" rel="noopener noreferrer">Movies I like</a>
         
 
           <!-- editable movie list -->
@@ -385,6 +497,16 @@
     </svg>
   </a>
 
+  <!-- MOBILE-ONLY: compact sticky music bar (placed near end so it overlays content) -->
+  <div class="mobile-only" aria-hidden="false">
+    <div class="mobile-music-bar" role="region" aria-label="Mobile music player">
+      <div class="mm-title">Music — tap to open</div>
+      <div>
+        <button id="mm-play" aria-label="Play music" type="button">▶</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts: player -> post-popup -> pjax (order matters) -->
   <script src="js/player.js" defer></script>
   <script src="js/post-popup.js" defer></script>
@@ -392,6 +514,7 @@
 
   <!-- Rotator script (sizes frame automatically, shows full images, pauses on hover)
        Updated to expose a re-init function and avoid duplicate handlers when PJAX replaces content.
+       Added a small JS fallback that forces centering (margin:auto) on mobile after size changes.
   -->
   <script>
   (function () {
@@ -514,6 +637,29 @@
         els.rot.classList.add('visible');
 
         highlightDot(R.rotIndex);
+
+        // === JS fallback to force centering on mobile (requested) ===
+        // Some devices/JS sizing combos can leave the frame offset; force a margin auto
+        // and ensure the rotator-inner uses center justification. This runs only on small viewports.
+        try {
+          if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) {
+            if (els.frame && els.frame.style) {
+              els.frame.style.marginLeft = 'auto';
+              els.frame.style.marginRight = 'auto';
+              // small vertical margin for spacing on phones
+              els.frame.style.marginTop = els.frame.style.marginTop || '18px';
+              els.frame.style.marginBottom = els.frame.style.marginBottom || '18px';
+            }
+            if (els.frame && els.frame.parentElement) {
+              els.frame.parentElement.style.justifyContent = 'center';
+              els.frame.parentElement.style.display = 'flex';
+            }
+          }
+        } catch (e) {
+          // fallback: ignore errors — centering is a nicety not critical
+          console.warn('rotator mobile centering fallback failed', e);
+        }
+        // === end fallback ===
       };
 
       // defensive: if preload fails to load quickly, ensure the frame doesn't stay empty forever
@@ -692,6 +838,62 @@
         if (closeBtn) closeBtn.click();
         else hideOverlay();
       });
+    })();
+  </script>
+
+  <!-- MOBILE-ONLY initializer (guarded) - minimal, non-destructive -->
+  <script>
+    (function () {
+      // Only run mobile enhancements when viewport is small.
+      if (!window.matchMedia) return;
+      const mq = window.matchMedia('(max-width: 768px)');
+      function mobileInit() {
+        // mark popup to use mobile-fullscreen styles (CSS above will apply)
+        const popup = document.getElementById('sh-post-popup');
+        if (popup) {
+          popup.classList.add('mobile-fullscreen');
+        }
+
+        // make summary elements keyboard accessible when used as toggles
+        Array.from(document.querySelectorAll('.mobile-recs summary')).forEach(s => {
+          if (!s.getAttribute('tabindex')) s.setAttribute('tabindex', '0');
+          // allow Enter/Space to toggle (native handles click on summary, but ensure keyboard behavior)
+          s.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter' || ev.key === ' ') {
+              ev.preventDefault();
+              s.parentElement.open = !s.parentElement.open;
+            }
+          });
+        });
+
+        // wire a small handler for the mobile music bar play button to lazy-init audio via your existing player
+        const mmPlay = document.getElementById('mm-play');
+        if (mmPlay && !mmPlay.dataset.__wired) {
+          mmPlay.dataset.__wired = '1';
+          mmPlay.addEventListener('click', () => {
+            // if you have a player API on window (player.js), try to use it; otherwise open spotify link as fallback
+            if (window.ShaltzPlayer && typeof window.ShaltzPlayer.toggle === 'function') {
+              window.ShaltzPlayer.toggle();
+            } else {
+              // fallback: open your spotify profile in a new tab to avoid autoplay
+              window.open('https://open.spotify.com/user/shalvin.rautela', '_blank', 'noopener');
+            }
+          });
+        }
+      }
+
+      function handleMQ(e) {
+        if (e.matches) mobileInit();
+        else {
+          // if switching to desktop, remove mobile markers to avoid interfering
+          const popup = document.getElementById('sh-post-popup');
+          if (popup) popup.classList.remove('mobile-fullscreen');
+        }
+      }
+
+      // initialize on load if mobile, and listen for changes
+      if (mq.matches) mobileInit();
+      mq.addListener(handleMQ);
     })();
   </script>
 

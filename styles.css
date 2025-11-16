@@ -2,10 +2,6 @@
    SHALTZ MODE — TOXIC LIME EDITION (Option A — #b6ff00)
    Full stylesheet: theme variables, overlay, hub layout (side cards + rotator),
    mini-grid, popup, rotator, and responsive rules.
-
-   Updated: removed ".ext-hint" badge (no more "opens" text), kept side-card compact + internal list scroll
-   Added: floating-twitter corner icon styles (keeps aesthetic identical)
-   Added: header-twitter styles for embedded handle in header
    ============================================================ */
 
 /* Toxic Lime + Red theme variables */
@@ -37,20 +33,18 @@
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; padding: 0; }
 
-/* Utility classes */
+ /* Utility classes */
 .hidden { display: none !important; }
 
 /* ============================================================
    PAGE DIM OVERLAY
-   - sits above page content and subtle CRT/noise layers
-   - sits below the popup window (popup has very high z-index)
    ============================================================ */
 #page-dim-overlay {
   position: fixed;
   inset: 0;
   background: var(--overlay-color);
-  z-index: 9990;               /* above CRT (999) / body::after (998), under mini-opener (9999) and popup (100000) */
-  pointer-events: none;        /* when hidden, allow clicks through */
+  z-index: 9990;
+  pointer-events: none;
   opacity: 0;
   transition: opacity 220ms ease;
   will-change: opacity;
@@ -59,22 +53,20 @@ html, body { height: 100%; margin: 0; padding: 0; }
   user-select: none;
 }
 
-/* active state: intercept clicks */
 #page-dim-overlay.visible {
   pointer-events: auto;
   opacity: 1;
 }
 
-/* reduced motion safety */
 @media (prefers-reduced-motion: reduce) {
   #page-dim-overlay { transition: none; }
 }
 
 /* ============================================================
-   FULL PAGE LIME BACKGROUND (Option A)
+   FULL PAGE LIME BACKGROUND
    ============================================================ */
 body {
-  background: var(--lime-bg);      /* toxic lime everywhere */
+  background: var(--lime-bg);
   color: var(--text-dark);
   font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, "Courier New", monospace;
   -webkit-font-smoothing: antialiased;
@@ -140,17 +132,12 @@ body {
   gap: 8px;
 }
 
-/* ---------------------------
-   Header Twitter handle styles
-   (for the embedded @YouShallWin under the title)
-   --------------------------- */
-/* Ensure the inner div (title + handle) sits inline with the logo */
+/* Header Twitter handle styles */
 .header-brand > div {
   display: inline-block;
   vertical-align: middle;
 }
 
-/* The subtle handle style — matches site typography and tone */
 .header-twitter {
   display: inline-block;
   margin-top: 6px;
@@ -167,16 +154,13 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Hover/focus reveal — gentle, non-intrusive */
 .header-twitter:hover,
 .header-twitter:focus {
   opacity: 1;
   box-shadow: 0 8px 28px rgba(0,0,0,0.45), 0 0 18px rgba(182,255,0,0.04);
   outline: none;
-  transform: translateY(-2px);
 }
 
-/* small-screen tweak so header doesn't crowd */
 @media (max-width: 540px) {
   .header-twitter { font-size: 12px; margin-top: 4px; padding: 1px 5px; }
 }
@@ -201,13 +185,14 @@ main#main-content {
   margin: 20px 0;
 }
 
+/* added: ensure inner row centers content by default */
 .rotator-inner {
   display: flex;
   align-items: center;
   gap: 6px;
+  justify-content: center; /* ensure controls/dots center when possible */
 }
 
-/* Frame sized dynamically by JS */
 .rotator-frame {
   display: flex;
   align-items: center;
@@ -223,7 +208,7 @@ main#main-content {
 .rotator-frame img#rotator {
   width: 100%;
   height: 100%;
-  object-fit: contain;      /* FULL image visible */
+  object-fit: contain;
   display: block;
   opacity: 0;
   transform: scale(0.99);
@@ -271,7 +256,6 @@ main#main-content {
 
 /* ============================================================
    HUB LAYOUT: side cards + centered rotator
-   - used on desktop / wide screens
    ============================================================ */
 .hub {
   max-width: 1100px;
@@ -291,8 +275,7 @@ main#main-content {
   align-items: stretch;
 }
 
-/* generic side-card used in hub
-   NOW: fixed shorter height; content controlled with flex so lists scroll */
+/* generic side-card used in hub */
 .side-card {
   background: linear-gradient(180deg, #0a0a0a, #080808);
   border-radius: 8px;
@@ -307,14 +290,12 @@ main#main-content {
   transition: transform 160ms ease, box-shadow 160ms ease;
   position: relative;
 
-  /* NEW: fixed shorter height */
   height: 320px;
   min-height: 320px;
   max-height: 320px;
   overflow: hidden;
 }
 
-/* interactive hover/focus */
 .side-card:focus-within,
 .side-card:hover {
   transform: translateY(-6px);
@@ -322,10 +303,8 @@ main#main-content {
   outline: none;
 }
 
-/* cover area reduced in height to free space for list */
 .side-card .cover {
   width: 100%;
-  /* Use a fixed cover height to make cards shorter and consistent */
   height: 120px;
   border-radius: 6px;
   overflow: hidden;
@@ -344,12 +323,10 @@ main#main-content {
   display: block;
 }
 
-/* This is the clickable title inside the card. Only this element is an anchor.
-   Removed extra top margin so title sits tightly under the cover. */
 .side-card .title-link {
   display: inline-block;
-  margin: 0; /* tightened: no extra space above */
-  margin-top: 6px; /* small breathing but not big */
+  margin: 0;
+  margin-top: 6px;
   font-family: "Courier New", monospace;
   font-weight: 700;
   color: #b6ff00;
@@ -367,7 +344,6 @@ main#main-content {
   box-shadow: 0 0 18px rgba(182,255,0,0.04);
 }
 
-/* subtitle small line */
 .side-card .sub {
   font-size: 12px;
   color: rgba(255,255,255,0.8);
@@ -377,7 +353,6 @@ main#main-content {
   flex: 0 0 auto;
 }
 
-/* list of names under each card — now scrolls if content exceeds available area */
 .side-card .item-list {
   width: 100%;
   margin: 0;
@@ -388,13 +363,11 @@ main#main-content {
   gap: 8px;
   align-items: start;
 
-  /* NEW: let this area take remaining space and scroll */
   flex: 1 1 auto;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 
-/* item link appearance */
 .side-card .item-list li a {
   color: rgba(255,255,255,0.9);
   text-decoration: none;
@@ -405,7 +378,6 @@ main#main-content {
   display: inline-block;
 }
 
-/* hover / focus visible state for item links */
 .side-card .item-list li a:hover,
 .side-card .item-list li a:focus {
   color: #fff;
@@ -413,7 +385,6 @@ main#main-content {
   outline: none;
 }
 
-/* styling the internal scrollbar for item-list so it matches the design */
 .side-card .item-list::-webkit-scrollbar {
   width: 10px;
 }
@@ -428,13 +399,11 @@ main#main-content {
   border-radius: 8px;
 }
 
-/* fallback for firefox */
 .side-card .item-list {
   scrollbar-width: thin;
   scrollbar-color: rgba(0,0,0,0.2) rgba(0,0,0,0.04);
 }
 
-/* center rotator tweaks inside hub */
 .hub-rotator {
   display: flex;
   flex-direction: column;
@@ -443,7 +412,6 @@ main#main-content {
   justify-content: flex-start;
 }
 
-/* ensure rotator respects available height and is centered visually */
 .hub .rotator-frame {
   max-width: 100%;
   border: 4px solid var(--bright-border);
@@ -453,12 +421,6 @@ main#main-content {
   transition: width 260ms ease, height 260ms ease;
   background: #fff4;
 }
-
-/* ============================================================
-   MINI GRID — horizontal scrollable cards (fallback / mobile)
-   ============================================================ */
-/* ... (rest of CSS unchanged) ... */
-
 
 /* ============================================================
    MINI GRID — horizontal scrollable cards (fallback / mobile)
@@ -492,7 +454,7 @@ main#main-content {
 .mini-grid::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 8px; }
 
 .mini-card {
-  flex: 0 0 220px;               /* visible card width — adjust if you want larger */
+  flex: 0 0 220px;
   scroll-snap-align: center;
   background: linear-gradient(180deg, #0a0a0a, #080808);
   border-radius: 8px;
@@ -551,7 +513,6 @@ main#main-content {
   font-family: Arial, sans-serif;
 }
 
-/* small external link hint */
 .mini-card .ext-hint {
   position: absolute;
   right: 8px;
@@ -589,7 +550,6 @@ main#main-content {
   color: #000;
 }
 
-/* Toxic-lime neon link */
 .neon-link {
   color: #000;
   font-weight: 700;
@@ -603,7 +563,7 @@ main#main-content {
 }
 
 /* ============================================================
-   TERMINAL FOOTER (dark for contrast on lime)
+   TERMINAL FOOTER
    ============================================================ */
 .sh-terminal {
   max-width: 1100px;
@@ -672,7 +632,7 @@ main#main-content {
 }
 
 /* ============================================================
-   AUDIO PLAYER (matches toxic lime theme)
+   AUDIO PLAYER
    ============================================================ */
 #shaltz-audio-player {
   position: fixed;
@@ -696,9 +656,7 @@ main#main-content {
 }
 
 /* ============================================================
-   Floating Twitter / X icon (subtle, non-intrusive)
-   - placed near other fixed UI (audio player / mini-opener)
-   - sits above the page-dim overlay but below the popup modal
+   Floating Twitter / X icon
    ============================================================ */
 .floating-twitter {
   position: fixed;
@@ -711,12 +669,12 @@ main#main-content {
   justify-content: center;
   border-radius: 8px;
   text-decoration: none;
-  z-index: 9995; /* above page-dim-overlay (9990) but below popup (100000) */
+  z-index: 9995;
   cursor: pointer;
-  opacity: 0.48; /* subtle by default */
+  opacity: 0.48;
   transition: opacity 180ms ease, transform 160ms ease, box-shadow 160ms ease;
-  color: rgba(255,255,255,0.92); /* icon color (matches text tone) */
-  background: rgba(0,0,0,0.18); /* faint backdrop to keep legibility on varied images */
+  color: rgba(255,255,255,0.92);
+  background: rgba(0,0,0,0.18);
   border: 1px solid rgba(255,255,255,0.03);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
@@ -724,7 +682,6 @@ main#main-content {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* hover/focus: gentle reveal (no change to layout or size) */
 .floating-twitter:hover,
 .floating-twitter:focus {
   opacity: 1;
@@ -733,21 +690,18 @@ main#main-content {
   outline: none;
 }
 
-/* SVG inside should use currentColor (no explicit color declaration needed) */
 .floating-twitter svg { display: block; width: 22px; height: 22px; }
 
-/* slightly reduce size on very small screens so it doesn't obstruct */
 @media (max-width: 420px) {
   .floating-twitter { right: 12px; bottom: 12px; width: 36px; height: 36px; padding: 4px; opacity: 0.42; }
 }
 
-/* Respect prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   .floating-twitter { transition: none; transform: none; }
 }
 
 /* ============================================================
-   CRT OVERLAY + NOISE (kept subtle)
+   CRT OVERLAY + NOISE
    ============================================================ */
 .crt-overlay {
   pointer-events: none;
@@ -773,8 +727,6 @@ body::after {
 
 /* ============================================================
    POPUP / OVERLAY STYLES
-   (merged from legacy popup CSS — preserves the white outer frame,
-    dark inner modal, thin green accent border, and custom scrollbar)
    ============================================================ */
 #sh-post-popup {
   position: fixed;
@@ -783,7 +735,7 @@ body::after {
   align-items: center;
   justify-content: center;
   z-index: 100000;
-  pointer-events: none; /* default hidden state */
+  pointer-events: none;
 }
 
 #sh-post-popup.hidden {
@@ -791,7 +743,6 @@ body::after {
   pointer-events: none;
 }
 
-/* white outer framed border to mimic screenshot */
 .sh-popup-outer-frame {
   position: relative;
   border: 6px solid var(--popup-outer-frame);
@@ -804,7 +755,6 @@ body::after {
   pointer-events: auto;
 }
 
-/* the inner window (dark) */
 .sh-popup-window {
   width: 100%;
   max-width: 860px;
@@ -820,7 +770,6 @@ body::after {
   position: relative;
 }
 
-/* topbar / close */
 .sh-popup-topbar {
   display: flex;
   justify-content: flex-end;
@@ -845,16 +794,14 @@ body::after {
   outline: none;
 }
 
-/* content area */
 .sh-popup-body {
   color: #f3f3f3;
   line-height: 1.65;
   font-size: 16px;
-  overflow: auto; /* inner scrolling */
-  padding-right: 8px; /* reserve space for scrollbar */
+  overflow: auto;
+  padding-right: 8px;
 }
 
-/* small loading placeholder */
 .sh-popup-loading {
   color: rgba(255,255,255,0.85);
   font-family: "Courier New", monospace;
@@ -862,7 +809,6 @@ body::after {
   text-align: center;
 }
 
-/* subtle border glow around inner content */
 .sh-popup-window::after {
   content: "";
   position: absolute;
@@ -872,7 +818,6 @@ body::after {
   box-shadow: 0 0 38px rgba(20,211,154,0.06);
 }
 
-/* custom scrollbar for popup body */
 .sh-popup-body::-webkit-scrollbar {
   width: 12px;
 }
@@ -888,13 +833,11 @@ body::after {
   border: 2px solid rgba(0,0,0,0.08);
 }
 
-/* fallback scrollbar coloring for Firefox */
 .sh-popup-body {
   scrollbar-width: thin;
   scrollbar-color: rgba(20,211,154,0.28) rgba(0,0,0,0.08);
 }
 
-/* make sure interactive elements appear above overlay */
 .sh-popup-window a,
 .sh-popup-window button {
   color: var(--popup-accent);
@@ -909,13 +852,11 @@ body::after {
 }
 
 @media (max-width: 880px) {
-  /* adjust mini-card sizes if used */
   .mini-card { flex: 0 0 180px; }
   .mini-card .cover { width: 140px; height: 140px; }
 }
 
 @media (max-width: 860px) {
-  /* stack into single column on small screens: rotator full width, cards below as horizontal scroll */
   .hub {
     grid-template-columns: 1fr;
     grid-template-rows: auto;
@@ -936,7 +877,6 @@ body::after {
   .rotator-frame img#rotator { height: 46vw; width: auto; }
   main#main-content { padding: 16px; }
 
-  /* mobile-specific popup tweaks */
   #sh-post-popup { inset: 8px; }
   .sh-popup-outer-frame { max-width: 100%; max-height: calc(100% - 16px); }
   .sh-popup-window { max-height: calc(100vh - 32px); padding: 14px; }
@@ -947,4 +887,147 @@ body::after {
   .mini-card { flex: 0 0 150px; padding: 8px; }
   .mini-card .cover { width: 120px; height: 120px; }
   .side-card { min-width: 150px; flex: 0 0 150px; height: auto; max-height: none; }
+}
+
+/* ============================================================
+   MOBILE-ONLY ENHANCEMENTS (ADDED BY MERGE)
+   ============================================================ */
+.mobile-only { display: none !important; }
+
+@media (max-width: 768px) {
+
+  /* Make sure mobile-only elements are visible only here */
+  .mobile-only { display: block !important; }
+
+  /* Stack the hub into a single column without touching desktop rules */
+  .hub { grid-template-columns: 1fr !important; padding: 0 12px; gap:12px; }
+
+  /* Side-cards become horizontal scroll list for space efficiency */
+  .side-cards { flex-direction: row !important; overflow-x: auto; gap:12px; padding:8px 0; }
+  .side-card { min-width:180px; flex:0 0 180px; height:auto !important; max-height:none !important; overflow:visible; }
+
+  /* Rotator reduced size on phones */
+  .rotator-frame { width: 92vw !important; max-width: 720px !important; height: auto !important; margin: 18px auto !important; }
+
+  /* Center the rotator wrapper so prev/next and dots line up centered */
+  .rotator-wrap { display:flex; justify-content:center; align-items:center; }
+  .rotator-inner { justify-content: center !important; } /* ensure inner row centers */
+
+  /* Popup: make it fill screen comfortably on mobile but keep desktop popup unchanged */
+  #sh-post-popup.mobile-fullscreen { position: fixed; inset: 0; z-index: 1500; display: block; }
+  #sh-post-popup.mobile-fullscreen .sh-popup-outer-frame {
+    width: 100%; height: 100%; border-radius: 0; padding: 0; max-width: 100%; max-height: 100%;
+  }
+  #sh-post-popup.mobile-fullscreen .sh-popup-window {
+    width: 100%; height: 100%; max-width: 100%; max-height: 100%; border-radius: 0; padding: 14px; box-sizing: border-box;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  #sh-post-popup.mobile-fullscreen .sh-popup-body {
+    overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px; flex: 1 1 auto;
+  }
+  #sh-post-popup.mobile-fullscreen .sh-popup-topbar { padding: 8px; position: sticky; top: 0; background: transparent; z-index: 10; }
+
+  /* Recommendations accordion (mobile only) - use native details/summary for accessibility */
+  .mobile-recs { margin: 12px 0; padding: 0 6px; }
+  .mobile-recs details {
+    background: linear-gradient(180deg,#0b0b0b,#070707);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    padding: 8px;
+    border: 2px solid rgba(182,255,0,0.06);
+  }
+  .mobile-recs summary {
+    list-style: none;
+    cursor: pointer;
+    font-weight: 700;
+    font-family: "Courier New", monospace;
+    color: rgba(182,255,0,1);
+    padding: 6px 4px;
+    outline: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 16px;
+  }
+  .mobile-recs summary::marker { display: none; }
+  .mobile-recs summary::after {
+    content: "▾";
+    font-size: 14px;
+    color: rgba(255,255,255,0.8);
+    transform: rotate(0deg);
+    transition: transform 160ms ease;
+  }
+  .mobile-recs details[open] summary::after { transform: rotate(180deg); }
+
+  .mobile-recs .rec-list { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+  .mobile-recs .rec-list a { text-decoration: none; font-family: Arial, sans-serif; color: #fff; font-size: 14px; padding: 6px 8px; border-radius: 6px; background: rgba(255,255,255,0.02); display: block; }
+
+  .mobile-recs summary:focus { box-shadow: 0 6px 18px rgba(0,0,0,0.4); border-radius: 6px; outline: none; }
+
+  /* Compact sticky music bar (mobile only) */
+  .mobile-music-bar {
+    position: fixed; left: 12px; right: 12px; bottom: 14px; z-index: 1200;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 8px 10px; border-radius: 12px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.92), rgba(0,0,0,0.85));
+    border: 1px solid rgba(182,255,0,0.06); box-shadow: 0 8px 28px rgba(0,0,0,0.6);
+  }
+  .mobile-music-bar .mm-title { font-size: 14px; color: #fff; font-family: Arial, sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mobile-music-bar button { background: none; border: none; color: rgba(182,255,0,1); font-size: 16px; padding: 8px; min-width: 44px; min-height: 44px; border-radius: 8px; }
+
+  /* increase tappable areas globally on mobile for buttons/links that are interactive */
+  button, .title-link, .rot-btn, .mini-close, .sh-popup-close, .floating-twitter { touch-action: manipulation; }
+  a, button { -webkit-tap-highlight-color: rgba(182,255,0,0.06); }
+
+  /* ensure rotator controls are reachable */
+  .rot-btn { padding: 10px 14px; min-width: 44px; min-height: 44px; }
+
+  /* reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    .rotator-frame, .mobile-recs details, .mobile-music-bar, .rot-btn { transition: none !important; }
+  }
+
+  /* ============================================================
+     HIDING THE FOUR SPECIFIC CARDS (Music / Books / Articles / Movies)
+     - This is the only change requested: remove those "I like" cards
+       from the mobile view while preserving everything else.
+     ============================================================ */
+  [aria-labelledby="music-title"],
+  [aria-labelledby="books-title"],
+  [aria-labelledby="articles-title"],
+  [aria-labelledby="movies-title"] {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* ============================================================
+     HEADER ALIGNMENT FIXES (mobile only) — ensure left border/logo visible
+     ============================================================ */
+  .old-header {
+    padding-left: 16px !important; /* increased to avoid left clipping on many phones */
+    padding-right: 12px !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  }
+  .old-header ._inner {
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box; /* ensure padding calculations are stable */
+  }
+  .site-logo {
+    margin-left: 0 !important;
+  }
+}
+
+/* Narrow-phone tweaks */
+@media (max-width: 480px) {
+  .old-site-title { font-size: 32px !important; }
+  main#main-content { padding: 12px !important; }
+  .rotator-frame { width: 94vw !important; }
+  .mobile-music-bar { left: 8px; right: 8px; bottom: 10px; padding: 8px; border-radius: 10px; }
 }

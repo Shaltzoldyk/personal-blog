@@ -2,6 +2,7 @@
  * player.js (updated)
  *  - Adds a volume slider and mute/unmute button to the 90s pixel player.
  *  - Persists volume & mute state in localStorage.
+ *  - Adds a safe toggle() method and exposes alias window.ShaltzPlayer for compatibility
  *
  * Include with: <script src="js/player.js" defer></script>
  */
@@ -274,6 +275,29 @@
       audio.play().catch(()=>{});
     }
 
+    // Provide a safe toggle method for play/pause (used by mobile UI)
+    function _togglePlay() {
+      // If audio is currently playing (not paused), pause; else play.
+      try {
+        if (!audio.src) {
+          setTrack(currentIndex, false);
+        }
+        if (audio.paused) {
+          userInteracted = true;
+          audio.play().then(() => {
+            isPlaying = true;
+            updateButtons();
+            persist();
+          }).catch(()=>{});
+        } else {
+          audio.pause();
+          isPlaying = false;
+          updateButtons();
+          persist();
+        }
+      } catch (e) { /* defensive */ }
+    }
+
     return {
       el: dom,
       audio,
@@ -283,11 +307,58 @@
       back: () => btnBack.click(),
       setVolume: (v) => { currentVolume = Math.min(1, Math.max(0, v)); applyVolume(); persist(); },
       toggleMute: () => { isMuted = !isMuted; applyVolume(); persist(); },
-      getState: () => ({ index: currentIndex, isPlaying, currentTime: audio.currentTime || 0, volume: currentVolume, muted: isMuted })
+      getState: () => ({ index: currentIndex, isPlaying, currentTime: audio.currentTime || 0, volume: currentVolume, muted: isMuted }),
+      // new compatibility method
+      toggle: _togglePlay
     };
   }
 
-  window.__SHALTZ_PLAYER = Player();
-  document.dispatchEvent(new CustomEvent('sh:player-ready', { detail: { player: window.__SHALTZ_PLAYER } }));
+  // Initialize player immediately (conservative - existing behavior preserved)
+  try {
+    window.__SHALTZ_PLAYER = Player();
+    // Alias for older/inconsistent references (index.html used window.ShaltzPlayer)
+    if (!window.ShaltzPlayer) window.ShaltzPlayer = window.__SHALTZ_PLAYER;
+    document.dispatchEvent(new CustomEvent('sh:player-ready', { detail: { player: window.__SHALTZ_PLAYER } }));
+  } catch (e) {
+    console.warn('Player initialization failed', e);
+  }
+
+  // Auto-wire mobile mm-play button if present (non-destructive)
+  function wireMobilePlayButton() {
+    try {
+      const mm = document.getElementById('mm-play');
+      if (!mm) return;
+      // Avoid double-binding
+      if (mm.dataset.__shWire) return;
+      mm.dataset.__shWire = '1';
+      mm.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        // If player is ready, toggle playback; otherwise fallback to opening Spotify link
+        if (window.__SHALTZ_PLAYER && typeof window.__SHALTZ_PLAYER.toggle === 'function') {
+          try {
+            window.__SHALTZ_PLAYER.toggle();
+            return;
+          } catch (e) { /* fallback below */ }
+        }
+        // Fallback: open Spotify profile (do not attempt autoplay)
+        window.open('https://open.spotify.com/user/shalvin.rautela', '_blank', 'noopener');
+      });
+    } catch (e) { /* silent */ }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      wireMobilePlayButton();
+    });
+  } else {
+    wireMobilePlayButton();
+  }
+
+  // Also wire again after PJAX events (defensive)
+  ['pjax:loaded', 'pjax:complete', 'pjax:end'].forEach(ev => {
+    document.addEventListener(ev, () => {
+      wireMobilePlayButton();
+    });
+  });
 
 })();

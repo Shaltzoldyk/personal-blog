@@ -5,13 +5,12 @@
  *    injects into the popup, and pushes state via history.pushState().
  *  - Respects modifier keys and target="_blank" (won't intercept those).
  *
- * Updated behavior:
- *  - Avoids calling history.back() when closing the popup to prevent PJAX/popstate races.
- *  - Restores the previous URL/state using history.replaceState() (no popstate event).
- *  - Saves the previous history state before opening so it can be restored cleanly.
- *  - Integrates with page dim overlay (#page-dim-overlay) if present:
- *      * Shows overlay when popup opens and hides when it closes.
- *      * Clicking the overlay will close the popup (mirrors typical modal behavior).
+ * Updated behavior (conservative + mobile enhancements):
+ *  - Reuses existing #sh-post-popup container when present (non-destructive).
+ *  - Adds mobile-only `.mobile-fullscreen` toggling via matchMedia.
+ *  - Adds a lightweight swipe-down-to-close gesture when mobile-fullscreen is active.
+ *  - Keeps history handling: pushState on open, replaceState on close (no popstate storms).
+ *  - Integrates with page-dim-overlay if present.
  *
  * Include with:
  * <script src="js/post-popup.js" defer></script>
@@ -29,10 +28,14 @@
   let _previousURL = null;
   let _previousState = null;
 
+  // Mobile swipe state
+  let _touchStartY = null;
+  let _touchCurrentY = null;
+  let _touchStarted = false;
+  let _swipeHandlerAttached = false;
+
   /* ---------------------------
      Overlay helper functions
-     - These toggle the #page-dim-overlay element if present.
-     - Uses the same "hidden" + "visible" class pattern as styles.css/index.html
      --------------------------- */
   function getOverlay() {
     try {
@@ -46,7 +49,6 @@
     const overlay = getOverlay();
     if (!overlay) return;
     overlay.classList.remove('hidden');
-    // Ensure transition runs (add visible on next frame)
     requestAnimationFrame(() => overlay.classList.add('visible'));
     overlay.setAttribute('aria-hidden', 'false');
   }
@@ -55,7 +57,6 @@
     const overlay = getOverlay();
     if (!overlay) return;
     overlay.classList.remove('visible');
-    // wait for transition, then hide completely
     const t = setTimeout(() => {
       overlay.classList.add('hidden');
       overlay.setAttribute('aria-hidden', 'true');
@@ -64,29 +65,93 @@
   }
 
   /* ---------------------------
-     Popup DOM creation & utilities
+     Popup DOM creation & utilities (conservative)
+     - If an element with POPUP_ID exists in the page (e.g., your index.html),
+       reuse it and *do not* overwrite its content. Only create elements that
+       are missing to keep this non-destructive.
      --------------------------- */
   function createPopupDOM() {
+    // If page already has the canonical popup node, reuse it.
     let popup = document.getElementById(POPUP_ID);
-    if (popup) return popup;
+    if (popup) {
+      // Ensure required structure exists inside the provided popup.
+      // We expect: .sh-popup-backdrop (or an element to click on to close),
+      // .sh-popup-window, .sh-popup-body, .sh-popup-close
+      let backdrop = popup.querySelector('.sh-popup-backdrop');
+      let win = popup.querySelector('.sh-popup-window');
+      let body = popup.querySelector('.sh-popup-body');
+      let closeBtn = popup.querySelector('.sh-popup-close');
 
+      // If any piece is missing, create minimal ones without altering existing siblings.
+      if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.className = 'sh-popup-backdrop';
+        backdrop.setAttribute('data-popup-close', '');
+        popup.insertBefore(backdrop, popup.firstChild);
+      }
+      if (!win) {
+        win = document.createElement('div');
+        win.className = 'sh-popup-window';
+        win.setAttribute('role', 'document');
+        win.tabIndex = -1;
+        popup.appendChild(win);
+      }
+      if (!body) {
+        body = document.createElement('div');
+        body.className = 'sh-popup-body';
+        win.appendChild(body);
+      }
+      if (!closeBtn) {
+        const topbar = popup.querySelector('.sh-popup-topbar') || document.createElement('div');
+        topbar.className = 'sh-popup-topbar';
+        closeBtn = document.createElement('button');
+        closeBtn.className = 'sh-popup-close';
+        closeBtn.setAttribute('aria-label', 'Close post');
+        closeBtn.type = 'button';
+        closeBtn.innerHTML = '×';
+        topbar.appendChild(closeBtn);
+        // ensure topbar lives before the body
+        if (!popup.querySelector('.sh-popup-topbar')) {
+          popup.insertBefore(topbar, win);
+        }
+      }
+
+      // Ensure essential attributes for accessibility
+      popup.setAttribute('role', 'dialog');
+      popup.setAttribute('aria-modal', 'true');
+      if (!popup.hasAttribute('aria-hidden')) popup.setAttribute('aria-hidden', 'true');
+
+      // Attach overlay click to close if overlay exists (idempotent; mark bound)
+      const overlay = getOverlay();
+      if (overlay && !overlay.dataset.__shOverlayBound) {
+        overlay.dataset.__shOverlayBound = '1';
+        overlay.addEventListener('click', () => closePopup(true));
+      }
+
+      return popup;
+    }
+
+    // If no existing popup element, create a self-contained popup that mirrors expected structure.
     popup = document.createElement('div');
     popup.id = POPUP_ID;
     popup.className = 'hidden';
     popup.setAttribute('role', 'dialog');
     popup.setAttribute('aria-hidden', 'true');
     popup.setAttribute('aria-modal', 'true');
+
     popup.innerHTML = `
       <div class="sh-popup-backdrop" data-popup-close></div>
-      <div class="sh-popup-window" role="document" tabindex="-1">
-        <div class="sh-popup-topbar">
-          <button class="sh-popup-close" aria-label="Close post" type="button">×</button>
+      <div class="sh-popup-outer-frame">
+        <div class="sh-popup-window" role="document" tabindex="-1">
+          <div class="sh-popup-topbar">
+            <button class="sh-popup-close" aria-label="Close post" type="button">×</button>
+          </div>
+          <div class="sh-popup-body"></div>
         </div>
-        <div class="sh-popup-body"></div>
       </div>
     `;
 
-    // Minimal inline CSS only if it's not already present (keeps visual even without styles.css)
+    // Minimal inline CSS fallback only if not present in document (keeps appearance if CSS missing)
     if (!document.getElementById(STYLE_ID)) {
       const s = document.createElement('style');
       s.id = STYLE_ID;
@@ -102,18 +167,13 @@
       document.head.appendChild(s);
     }
 
-    // Append to body (outside #main-content so PJAX won't remove it)
     document.body.appendChild(popup);
 
-    // If overlay exists, wire it to close the popup when clicked (mirror modal behavior).
-    // This is defensive: other scripts may also bind overlay; this handler is idempotent.
+    // If overlay exists, wire it to close the popup when clicked (defensive)
     const overlay = getOverlay();
     if (overlay && !overlay.dataset.__shOverlayBound) {
       overlay.dataset.__shOverlayBound = '1';
-      overlay.addEventListener('click', () => {
-        // Attempt to close the popup in the same way close handlers do
-        closePopup(true);
-      });
+      overlay.addEventListener('click', () => closePopup(true));
     }
 
     return popup;
@@ -129,28 +189,17 @@
   // Only intercept links that are clearly posts: either class "post-link", path contains '/posts/', or endsWith '.html'
   function shouldInterceptLink(a) {
     if (!a || !a.href) return false;
-    // explicit target blank -> let browser handle
     if (a.target && a.target.toLowerCase() === '_blank') return false;
-    // explicit download attribute -> let browser handle
     if (a.hasAttribute('download')) return false;
-    // explicit external rel -> don't intercept
     if (String(a.rel || '').toLowerCase().split(/\s+/).includes('external')) return false;
     if (!isSameOrigin(a.href)) return false;
-
-    // If the author explicitly opts out with data-no-popup or class 'no-popup', don't intercept
     if (a.hasAttribute('data-no-popup') || a.classList.contains('no-popup')) return false;
-
-    // If link has explicit class 'post-link', treat it as intended for popup
     if (a.classList.contains('post-link')) return true;
-
-    // Otherwise, check path heuristics
     try {
       const u = new URL(a.href, location.href);
       const path = u.pathname || '';
       if (path.includes('/posts/') || path.endsWith('.html')) return true;
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
     return false;
   }
 
@@ -170,39 +219,130 @@
       const el = doc.querySelector(s);
       if (el) return el;
     }
-    // fallback to body clone
     return doc.body.cloneNode(true);
   }
 
   /* ---------------------------
+     Mobile enhancements (conservative)
+     - Toggle .mobile-fullscreen class on popup when viewport <= 768px.
+     - Attach a simple swipe-to-close on the popup window when mobile-fullscreen is active.
+     --------------------------- */
+  const MQ = typeof window.matchMedia === 'function' ? window.matchMedia('(max-width: 768px)') : null;
+
+  function enableMobileFullscreenIfNeeded() {
+    const popup = document.getElementById(POPUP_ID);
+    if (!popup) return;
+    if (MQ && MQ.matches) {
+      popup.classList.add('mobile-fullscreen');
+      maybeAttachSwipeHandler();
+    } else {
+      popup.classList.remove('mobile-fullscreen');
+      maybeDetachSwipeHandler();
+    }
+  }
+
+  function maybeAttachSwipeHandler() {
+    if (_swipeHandlerAttached) return;
+    const popup = document.getElementById(POPUP_ID);
+    if (!popup) return;
+    const win = popup.querySelector('.sh-popup-window');
+    if (!win) return;
+
+    function onTouchStart(e) {
+      if (!MQ || !MQ.matches) return;
+      if (e.touches && e.touches.length === 1) {
+        _touchStarted = true;
+        _touchStartY = e.touches[0].clientY;
+        _touchCurrentY = _touchStartY;
+      }
+    }
+    function onTouchMove(e) {
+      if (!_touchStarted) return;
+      if (e.touches && e.touches.length === 1) {
+        _touchCurrentY = e.touches[0].clientY;
+        const delta = _touchCurrentY - _touchStartY;
+        // if dragging down, apply a gentle translate for feedback (non-destructive, removed on end)
+        if (delta > 0 && delta < 300) {
+          win.style.transform = `translateY(${delta}px)`;
+          win.style.transition = 'transform 0s';
+        }
+      }
+    }
+    function onTouchEnd(e) {
+      if (!_touchStarted) return;
+      const delta = (_touchCurrentY || 0) - (_touchStartY || 0);
+      // Reset transform
+      win.style.transition = 'transform 180ms ease';
+      win.style.transform = '';
+      _touchStarted = false;
+      _touchStartY = null;
+      _touchCurrentY = null;
+      // If swipe-down beyond threshold, close popup (mobile UX)
+      if (delta > 120) {
+        closePopup(true);
+      }
+    }
+
+    // Attach handlers
+    win.addEventListener('touchstart', onTouchStart, { passive: true });
+    win.addEventListener('touchmove', onTouchMove, { passive: true });
+    win.addEventListener('touchend', onTouchEnd, { passive: true });
+
+    // Store so we can remove later
+    win.__shaltz_swipe_handlers = { onTouchStart, onTouchMove, onTouchEnd };
+    _swipeHandlerAttached = true;
+  }
+
+  function maybeDetachSwipeHandler() {
+    if (!_swipeHandlerAttached) return;
+    const popup = document.getElementById(POPUP_ID);
+    if (!popup) return;
+    const win = popup.querySelector('.sh-popup-window');
+    if (!win || !win.__shaltz_swipe_handlers) return;
+    const h = win.__shaltz_swipe_handlers;
+    win.removeEventListener('touchstart', h.onTouchStart);
+    win.removeEventListener('touchmove', h.onTouchMove);
+    win.removeEventListener('touchend', h.onTouchEnd);
+    delete win.__shaltz_swipe_handlers;
+    _swipeHandlerAttached = false;
+  }
+
+  if (MQ && MQ.addListener) {
+    // listen to viewport changes and toggle mobile fullscreen class accordingly
+    MQ.addListener(enableMobileFullscreenIfNeeded);
+  }
+
+  /* ---------------------------
      Show / close logic
-     - Integrates overlay toggling for improved readability.
      --------------------------- */
   function showPopupWithContent(htmlNode, url) {
     const popup = createPopupDOM();
     const bodyEl = popup.querySelector('.sh-popup-body');
 
-    // store previously focused element to restore focus on close
     try { _lastActiveElement = document.activeElement; } catch (e) { _lastActiveElement = null; }
 
     bodyEl.innerHTML = '';
-    // move node into popup (clone to avoid removing from source doc if necessary)
+
+    // clone and sanitize
     const toInsert = htmlNode.cloneNode(true);
-    // remove scripts from inserted content for safety
     toInsert.querySelectorAll && toInsert.querySelectorAll('script').forEach(s => s.remove());
     bodyEl.appendChild(toInsert);
 
+    // set visible
     popup.classList.remove('hidden');
     popup.setAttribute('aria-hidden', 'false');
 
-    // also show the global page-dim overlay if present
+    // show overlay
     showOverlay();
 
-    // focus management: focus the window for screen readers
+    // focus the window for screen readers
     const win = popup.querySelector('.sh-popup-window');
-    try { win.focus(); } catch (e) {}
+    try { win && win.focus(); } catch (e) {}
 
-    // Save the previous URL and state BEFORE pushing the popup state.
+    // Mobile fullscreen toggling (if MQ matches)
+    enableMobileFullscreenIfNeeded();
+
+    // Save previous URL/state BEFORE pushing
     try {
       _previousURL = location.href;
       _previousState = history.state;
@@ -211,11 +351,10 @@
       _previousState = null;
     }
 
-    // push history state so back button closes popup
+    // push history state
     try {
       history.pushState({ sh_post_popup: true }, '', url);
     } catch (e) {
-      // ignore on older browsers or if blocked
       console.warn('history.pushState failed', e);
     }
 
@@ -231,35 +370,33 @@
     const bodyEl = popup.querySelector('.sh-popup-body');
     if (bodyEl) bodyEl.innerHTML = '';
 
-    // hide overlay as we close
+    // hide overlay
     hideOverlay();
+
+    // detach swipe handlers if any (defensive)
+    maybeDetachSwipeHandler();
 
     // restore focus
     try {
       if (_lastActiveElement && typeof _lastActiveElement.focus === 'function') {
         _lastActiveElement.focus();
       } else {
-        // fallback focus to body
         document.body.focus && document.body.focus();
       }
-    } catch (e) { /* ignore */ }
+    } catch (e) {}
     _lastActiveElement = null;
 
-    // If requested, restore previous URL/state WITHOUT triggering popstate.
+    // restore history/state without triggering popstate
     if (useHistoryRestore === true) {
       try {
         if (_previousURL !== null) {
-          // Replace current history entry (post URL) with the previous one,
-          // restoring the previous state object. This avoids firing popstate.
           history.replaceState(_previousState, '', _previousURL);
         } else {
-          // if we don't have previous URL/state, fallback to a gentle no-op;
-          // avoid calling history.back() to prevent PJAX/popstate races.
+          // nothing to do
         }
       } catch (e) {
         console.warn('history.replaceState failed', e);
       } finally {
-        // clear saved values
         _previousURL = null;
         _previousState = null;
       }
@@ -274,11 +411,7 @@
   function _documentClickHandler(ev) {
     if (ev.defaultPrevented) return;
 
-    // If it's not a left button click, allow default (middle-click opens new tab, right-click shows context menu)
-    // ev.button: 0 = left, 1 = middle, 2 = right
     if (ev.button !== 0) return;
-
-    // Respect modifier keys — if user used ctrl/cmd/shift/alt, let browser handle (open new tab/window)
     if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
 
     // find anchor
@@ -286,7 +419,7 @@
     while (el && el.nodeType === 1 && el.tagName !== 'A') el = el.parentElement;
     if (!el || el.tagName !== 'A') return;
 
-    // if clicked inside the popup, ignore (let popup handlers manage)
+    // don't intercept clicks that originate from inside open popup
     const popup = document.getElementById(POPUP_ID);
     if (popup && popup.contains(el)) return;
 
@@ -295,14 +428,14 @@
     ev.preventDefault();
     const href = el.href;
 
-    // Show a loader quickly
+    // Show a loader quickly in the existing popup (or created one)
     const created = createPopupDOM();
     const bodyEl = created.querySelector('.sh-popup-body');
     bodyEl.innerHTML = '<div style="padding:14px;font-family:Courier,monospace;">Loading…</div>';
     created.classList.remove('hidden');
     created.setAttribute('aria-hidden', 'false');
 
-    // Also show overlay while loading to give immediate feedback
+    // show overlay while loading
     showOverlay();
 
     // Fetch and extract content
@@ -317,7 +450,6 @@
         const contentEl = extractPostContent(doc);
         if (!contentEl) throw new Error('no-content');
 
-        // clone and sanitize (remove script tags)
         const clone = contentEl.cloneNode(true);
         clone.querySelectorAll && clone.querySelectorAll('script').forEach(s => s.remove());
 
@@ -326,9 +458,7 @@
       })
       .catch(err => {
         console.warn('Post popup failed, falling back to navigation', err);
-        // hide overlay (we showed it earlier)
         hideOverlay();
-        // fallback to full navigation
         try {
           window.location.href = href;
         } catch (e) {
@@ -341,9 +471,7 @@
      Handlers initialization
      --------------------------- */
   function initLinkHandlers() {
-    // ensure we only attach one global handler
     if (_inited && _clickHandler) return;
-
     _clickHandler = _documentClickHandler;
     document.addEventListener('click', _clickHandler);
   }
@@ -358,7 +486,6 @@
       // matches close button or backdrop attribute
       if (target.matches('.sh-popup-close') || target.hasAttribute('data-popup-close') || target.closest('.sh-popup-backdrop')) {
         ev.preventDefault();
-        // restore history/state without triggering popstate handling in PJAX
         closePopup(true);
       }
     });
@@ -384,10 +511,8 @@
           p.setAttribute('aria-hidden', 'true');
           const bodyEl = p.querySelector('.sh-popup-body');
           if (bodyEl) bodyEl.innerHTML = '';
-          // hide overlay when popstate closes the popup
           hideOverlay();
           document.dispatchEvent(new CustomEvent('sh:popup-close'));
-          // restore focus when closing via popstate
           try {
             if (_lastActiveElement && typeof _lastActiveElement.focus === 'function') {
               _lastActiveElement.focus();
@@ -398,7 +523,7 @@
           _lastActiveElement = null;
         }
       } else {
-        // Optionally re-open or keep open — no-op
+        // state indicates popup — no action (we already handle opening)
       }
     });
   }
@@ -409,6 +534,9 @@
     createPopupDOM();
     initLinkHandlers();
     initPopupCloseHandlers();
+
+    // Trigger initial mobile class state
+    enableMobileFullscreenIfNeeded();
 
     // small API for other scripts
     window.__SHALTZ_POST_POPUP = {
@@ -427,13 +555,12 @@
     init();
   }
 
-  // Also listen for a PJAX/replace event to ensure the popup DOM exists and handlers are still in place.
-  // Common custom events: 'pjax:complete', 'pjax:load', but we'll listen generically for 'pjax:complete' and 'pjax:loaded'
+  // Ensure popup DOM exists and handlers are in place after PJAX swaps
   ['pjax:complete', 'pjax:loaded', 'pjax:end'].forEach(evName => {
     document.addEventListener(evName, () => {
-      // ensure popup DOM exists after PJAX swap
       createPopupDOM();
-      // handlers are delegated, so no need to rebind click listener
+      // re-apply mobile class if needed (in case viewport didn't change)
+      enableMobileFullscreenIfNeeded();
     });
   });
 
