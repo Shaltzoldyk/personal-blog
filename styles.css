@@ -2,6 +2,8 @@
    SHALTZ MODE — TOXIC LIME EDITION (Option A — #b6ff00)
    Full stylesheet: theme variables, overlay, hub layout (side cards + rotator),
    mini-grid, popup, rotator, and responsive rules.
+   Updated (mobile-only): hide rotator arrows, hide floating Twitter on phones,
+   hide desktop audio player on phones, add dedicated mobile music button & panel styles.
    ============================================================ */
 
 /* Toxic Lime + Red theme variables */
@@ -33,7 +35,7 @@
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; padding: 0; }
 
- /* Utility classes */
+/* Utility classes */
 .hidden { display: none !important; }
 
 /* ============================================================
@@ -487,7 +489,7 @@ main#main-content {
   height: 180px;
   border-radius: 6px;
   overflow: hidden;
-  background: linear-gradient(180deg,#111,#000);
+  background: linear-gradient(180deg, #111, #000);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -636,7 +638,7 @@ main#main-content {
 }
 
 /* ============================================================
-   AUDIO PLAYER
+   AUDIO PLAYER (desktop)
    ============================================================ */
 #shaltz-audio-player {
   position: fixed;
@@ -900,6 +902,7 @@ body::after {
    ============================================================ */
 .mobile-only { display: none !important; }
 
+/* === Desktop behavior remains unchanged. Mobile overrides below === */
 @media (max-width: 768px) {
 
   /* Make sure mobile-only elements are visible only here */
@@ -954,7 +957,7 @@ body::after {
     overflow: visible; /* allow shadow/controls to be visible without clipping */
   }
 
-  /* Image behavior on mobile: don't stretch the image to the full container width.
+  /* Image behaviour on mobile: don't stretch the image to the full container width.
      Instead let JS set the frame size and keep the image centered using object-fit.
      This avoids visual left-padding when the natural image contains white space. */
   .rotator-frame img#rotator {
@@ -969,31 +972,19 @@ body::after {
     background: #ffffff; /* ensure image canvas reads correctly against lime */
   }
 
-  /* Overlay prev/next buttons so they sit inside the frame, vertically centered */
+  /* Hide rotator arrows on mobile as requested */
+  .rot-btn,
   .rot-prev, .rot-next {
-    position: absolute !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    background: rgba(0,0,0,0.06) !important;
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
     border: 0 !important;
-    color: var(--bright-border) !important;
-    width: 48px !important;
-    height: 48px !important;
-    min-width: 48px !important;
-    min-height: 48px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border-radius: 10px !important;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.28) !important;
-    cursor: pointer !important;
-    z-index: 12 !important;
+    background: transparent !important;
   }
-  .rot-prev { left: calc(50% - 46vw); /* visually nudge inside the left edge of the frame */ }
-  .rot-next { right: calc(50% - 46vw); /* visually nudge inside the right edge of the frame */ }
-
-  /* Note: the left/right calc uses 46vw because the frame width is ~92vw — this keeps buttons flush inside.
-     It's defensive and works across a range of phone widths without touching desktop rules. */
 
   /* center dots under the rotator */
   .rot-dots { display:flex; justify-content:center; gap:8px; margin-top: 10px; }
@@ -1006,7 +997,7 @@ body::after {
   .side-card { box-shadow: 0 8px 18px rgba(0,0,0,0.32); }
 
   /* ensure post-list has space to avoid overlap with sticky music bar */
-  .post-list.centered { padding-bottom: 84px; }
+  .post-list.centered { padding-bottom: 120px; }
 
   /* header left-edge fix — ensure paddings don't clip on many phones */
   .old-header {
@@ -1030,10 +1021,176 @@ body::after {
     background: linear-gradient(transparent, rgba(0,0,0,0.05));
   }
 
-  /* reduced motion for users who prefer it */
-  @media (prefers-reduced-motion: reduce) {
-    .rotator-frame, .mobile-recs details, .mobile-music-bar, .rot-btn { transition: none !important; }
+  /* Hide floating Twitter / X icon on mobile */
+  .floating-twitter {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
   }
+
+  /* Hide the desktop audio player on mobile (so the mobile sticky bar/panel is used) */
+  #shaltz-audio-player {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  /* ----------------------------
+     MOBILE MUSIC BUTTON (Option A)
+     - floating circular music button (always visible)
+     - defined here so desktop remains untouched
+     ---------------------------- */
+  /* default hidden on desktop; only displayed in this mobile block */
+  .mobile-music-button { display: none; }
+
+  .mobile-music-button {
+    position: fixed;
+    right: 14px;
+    bottom: 14px;
+    z-index: 1300;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, rgba(0,0,0,0.95), rgba(0,0,0,0.86));
+    border: 2px solid rgba(182,255,0,0.12);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.6);
+    color: #b6ff00;
+    font-size: 22px;
+    cursor: pointer;
+    transition: transform 120ms ease, box-shadow 120ms ease;
+    -webkit-tap-highlight-color: rgba(0,0,0,0.0);
+    touch-action: manipulation;
+  }
+  .mobile-music-button:active { transform: scale(.98); }
+  .mobile-music-button:focus { outline: 3px solid rgba(182,255,0,0.12); outline-offset: 3px; }
+
+  /* small visual pulsing ring when audio is playing (optional & subtle) */
+  .mobile-music-button.playing {
+    box-shadow: 0 10px 28px rgba(0,0,0,0.6), 0 0 12px rgba(182,255,0,0.08), 0 0 28px rgba(182,255,0,0.02);
+  }
+
+  /* ----------------------------
+     MOBILE MUSIC BAR (alternate: kept for compatibility)
+     - if you prefer a wider sticky mini-bar instead of circular icon,
+       the markup uses .mobile-music-bar. Both co-exist safely.
+     ---------------------------- */
+  .mobile-music-bar {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 14px;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.9), rgba(0,0,0,0.8));
+    border: 1px solid rgba(182,255,0,0.06);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.6);
+  }
+
+  .mobile-music-bar .mm-title {
+    font-size: 14px;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mobile-music-bar button {
+    background: none;
+    border: none;
+    color: var(--bright-border);
+    font-size: 18px;
+    padding: 8px;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+  }
+
+  .mobile-music-bar button:active,
+  .mobile-music-bar button:focus {
+    transform: translateY(0);
+    outline: none;
+  }
+
+  /* ----------------------------
+     MOBILE PLAYER PANEL (toggled open)
+     - keeps native audio controls for broad compatibility
+     ---------------------------- */
+  .mobile-player-panel {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 86px; /* sits above circular button (safe spacing) */
+    z-index: 1250;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.95), rgba(0,0,0,0.88));
+    border: 1px solid rgba(182,255,0,0.08);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.6);
+  }
+
+  .mobile-player-panel.open {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mobile-player-panel .mp-row {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .mobile-player-panel .mp-title {
+    font-family: Arial, sans-serif;
+    color: var(--bright-border);
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mobile-player-panel .mp-close {
+    background: none;
+    border: 1px solid rgba(182,255,0,0.06);
+    color: var(--bright-border);
+    padding: 6px 8px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  /* small accessibility hint: reduce motion for users who prefer reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .rotator-frame, .mobile-music-bar, .mobile-player-panel, .mobile-recs details, .rot-btn { transition: none !important; }
+  }
+
 }
 
 /* Narrow-phone tweaks */

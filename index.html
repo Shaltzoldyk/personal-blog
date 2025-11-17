@@ -249,101 +249,90 @@
       .mobile-recs .rec-list { margin-top: 8px; display:flex; flex-direction:column; gap:8px; }
       .mobile-recs .rec-list a { text-decoration:none; font-family: Arial, sans-serif; color: #fff; font-size: 14px; padding: 6px 8px; border-radius: 6px; background: rgba(255,255,255,0.02); }
 
-      /* compact sticky music bar for phones */
-      .mobile-music-bar {
+      /* --------------------------
+         MOBILE: floating circular music button (Option A)
+         - Always visible on mobile, small, non-obstructive, bottom-right.
+         - Tapping it opens the player panel above the button.
+         -------------------------- */
+      .mobile-music-button {
+        position: fixed;
+        right: 14px;
+        bottom: 14px;
+        z-index: 1300;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(180deg, rgba(0,0,0,0.95), rgba(0,0,0,0.86));
+        border: 2px solid rgba(182,255,0,0.12);
+        box-shadow: 0 10px 28px rgba(0,0,0,0.6);
+        color: #b6ff00;
+        font-size: 22px;
+        cursor: pointer;
+        transition: transform 120ms ease, box-shadow 120ms ease;
+        -webkit-tap-highlight-color: rgba(0,0,0,0.0);
+        touch-action: manipulation;
+      }
+      .mobile-music-button:active { transform: scale(.98); }
+      .mobile-music-button:focus { outline: 3px solid rgba(182,255,0,0.12); outline-offset: 3px; }
+
+      /* hidden by default (keeps DOM ready without visual clutter) */
+      .mobile-player-panel {
         position: fixed;
         left: 12px;
         right: 12px;
-        bottom: 14px;
-        z-index: 1200;
+        bottom: 86px; /* sits above the circular button */
+        z-index: 1250;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 12px;
+        background: linear-gradient(180deg, rgba(0,0,0,0.95), rgba(0,0,0,0.88));
+        border: 1px solid rgba(182,255,0,0.08);
+        box-shadow: 0 12px 36px rgba(0,0,0,0.6);
+      }
+      .mobile-player-panel.open {
         display: flex;
+        flex-direction: column;
+      }
+      .mobile-player-panel .mp-row {
+        width: 100%;
+        display: flex;
+        gap: 8px;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
-        padding: 8px 10px;
-        border-radius: 12px;
-        background: linear-gradient(180deg, rgba(0,0,0,0.9), rgba(0,0,0,0.8));
+      }
+      .mobile-player-panel .mp-title {
+        font-family: Arial, sans-serif;
+        color: #b6ff00;
+        font-size: 14px;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .mobile-player-panel .mp-close {
+        background: none;
         border: 1px solid rgba(182,255,0,0.06);
-        box-shadow: 0 8px 28px rgba(0,0,0,0.6);
-      }
-      .mobile-music-bar button { background: none; border: none; color: #b6ff00; font-size: 16px; padding: 8px; min-width:44px; min-height:44px; border-radius:8px; }
-      .mobile-music-bar .mm-title { font-size: 14px; color: #fff; font-family: Arial, sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-      /* Make popup fill the viewport on mobile for comfortable reading */
-      #sh-post-popup.mobile-fullscreen { position: fixed; inset: 0; z-index: 1500; display: block; }
-      #sh-post-popup.mobile-fullscreen .sh-popup-outer-frame { height: 100vh; width: 100vw; display:flex; align-items:stretch; justify-content:center; padding: 12px; box-sizing: border-box; }
-      #sh-post-popup.mobile-fullscreen .sh-popup-window { width: 100%; max-width: 100%; border-radius: 12px; height: 100%; display:flex; flex-direction: column; overflow: hidden; }
-      #sh-post-popup.mobile-fullscreen .sh-popup-body { overflow-y: auto; padding: 18px; -webkit-overflow-scrolling: touch; }
-      #sh-post-popup .sh-popup-topbar { display:flex; justify-content:flex-end; padding:8px; }
-
-      /* reduce rotator size on narrow phones */
-      .rotator-frame { width: 92vw !important; max-width: 740px; height: auto !important; }
-
-      /* IMPORTANT: Do NOT hide the hub/post-list/terminal here.
-         The destructive rules that removed everything were the cause of your mobile break.
-         The targeted hiding of the four "I like" cards is handled in styles.css via aria-labelledby,
-         so we intentionally keep this inline block non-destructive.
-      */
-
-      /* ---------------------------
-         ADDITIONAL MOBILE ALIGNMENT FIXES
-         These rules target the specific issues you reported:
-         - banner left-edge cropping
-         - carousel centering & arrows
-         - horizontal overflow
-         - mobile music/player overlap
-         - consistent spacing
-         --------------------------- */
-
-      /* ensure header sits inside viewport with comfortable padding (fixes left-edge cropping) */
-      .old-header {
-        padding: 12px;
-        margin: 8px 8px 0 8px;
-        box-sizing: border-box;
-        max-width: calc(100% - 16px);
-        border-radius: 6px;
-        background-clip: padding-box;
-      }
-
-      /* keep site title compact on phones */
-      .old-site-title {
-        font-size: 20px;
-        line-height: 1.05;
-        margin: 0;
-        letter-spacing: 0.4px;
-      }
-
-      /* center rotator inner content and avoid offset issues */
-      .rotator-inner {
-        justify-content: center;
-        align-items: center;
-        padding: 0 6px;
-        box-sizing: border-box;
-      }
-
-      /* ensure the frame is horizontally centered and visually lighter on phones */
-      .rotator-frame {
-        margin-left: auto !important;
-        margin-right: auto !important;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.35);
-      }
-
-      /* style arrow buttons so they sit inside the visible region and don't overlap awkwardly */
-      .rot-btn {
-        background: rgba(0,0,0,0.06);
-        border: none;
-        padding: 8px 10px;
+        color: #b6ff00;
+        padding: 6px 8px;
         border-radius: 8px;
-        font-size: 18px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: none;
-        min-width: 44px;
-        min-height: 44px;
+        font-size: 14px;
       }
-      .rot-prev { margin-right: 8px; }
-      .rot-next { margin-left: 8px; }
+
+      /* MOBILE: hide rotator arrows (you asked arrows not shown on mobile) */
+      .rot-btn {
+        display: none !important;
+      }
+
+      /* hide floating twitter/x icon on mobile */
+      .floating-twitter {
+        display: none !important;
+      }
 
       /* center dots under the rotator neatly */
       .rot-dots {
@@ -365,23 +354,14 @@
         padding-right: 6px;
       }
 
-      /* reduce the footprint of the sticky music bar so it doesn't visually crowd the lower content */
-      .mobile-music-bar {
-        padding: 8px 10px;
-        bottom: 10px;
-        left: 8px;
-        right: 8px;
-      }
-
-      /* lower z-index for some common external floating players so our controlled mobile bar sits above them.
-         These class names are defensive — they won't affect desktop and won't break if absent. */
+      /* ensure audio-related elements appear above external players */
       .player, .audio-player, .floating-player, audio {
         z-index: 1050 !important;
       }
 
-      /* adjust post-list spacing and ensure it doesn't sit under the music bar */
+      /* adjust post-list spacing and ensure it doesn't sit under the music UI */
       .post-list.centered {
-        padding: 0 12px 72px; /* larger bottom padding to avoid overlap with sticky bar */
+        padding: 0 12px 220px; /* big bottom padding to fully avoid overlap with sticky UI */
       }
 
       /* make popup topbar sticky so close button remains accessible */
@@ -393,7 +373,7 @@
       }
 
       /* ensure interactive elements are comfortably tappable */
-      .title-link, .mobile-music-bar button, .rot-btn {
+      .title-link, .mobile-music-button, .rot-btn {
         touch-action: manipulation;
       }
 
@@ -401,7 +381,7 @@
 
     /* small accessibility hint: reduce motion for users who prefer reduced motion */
     @media (prefers-reduced-motion: reduce) {
-      .mobile-recs details, .mobile-music-bar, .rotator-frame { transition: none !important; }
+      .mobile-recs details, .mobile-music-button, .rotator-frame { transition: none !important; }
     }
 
   </style>
@@ -432,10 +412,10 @@
           <summary>Books I like</summary>
           <div class="rec-list" aria-hidden="false">
             <!-- mirrored from desktop book list (shortened for mobile) -->
-            <a href="https://www.goodreads.com/book/show/placeholder1" target="_blank" rel="noopener noreferrer">Book 1 — (tap to open)</a>
-            <a href="https://www.goodreads.com/book/show/placeholder2" target="_blank" rel="noopener noreferrer">Book 2</a>
-            <a href="https://www.goodreads.com/book/show/placeholder3" target="_blank" rel="noopener noreferrer">Book 3</a>
-            <a href="https://www.goodreads.com/book/show/placeholder4" target="_blank" rel="noopener noreferrer">Book 4</a>
+            <a href="https://www.goodreads.com/book/show/60643059-the-network-state?ref=nav_sb_ss_1_17" target="_blank" rel="noopener noreferrer">The newtwork state - Balaji Srinivasan</a>
+            <a href="https://www.goodreads.com/book/show/38315.Fooled_by_Randomness?ac=1&from_search=true&qid=1ShEIgN8WA&rank=1" target="_blank" rel="noopener noreferrer">Fooled by randomness- Nassim Taleb</a>
+            <a href="https://www.goodreads.com/book/show/placeholder3" target="_blank" rel="noopener noreferrer"></a>
+            <a href="https://www.goodreads.com/book/show/placeholder4" target="_blank" rel="noopener noreferrer"></a>
           </div>
         </details>
 
@@ -460,7 +440,7 @@
         <details id="m-music">
           <summary>Music I like</summary>
           <div class="rec-list" aria-hidden="false">
-            <a href="https://open.spotify.com/user/shalvin.rautela" target="_blank" rel="noopener noreferrer">Spotify — full list</a>
+            <a href="https://open.spotify.com/album/4Uv86qWpGTxf7fU7lG5X6F?si=g8roBSX-Q4uA9UhwmD6xbw" target="_blank" rel="noopener noreferrer">The college dropout - Ye</a>
             <a href="https://open.spotify.com/album/3b4E89rxzZQ9zkhgKpj8N4?si=QZJ4BwTaQiqXg8sVBaARcg" target="_blank" rel="noopener noreferrer">Animals — Pink Floyd</a>
             <a href="https://open.spotify.com/album/77CZUF57sYqgtznUe3OikQ?si=Yq5ZQOrzT6GcRkvg_b5Mdw" target="_blank" rel="noopener noreferrer">I love my computer - Ninajirachi</a>
           </div>
@@ -476,7 +456,7 @@
         <!-- Music (left-top) — cover removed, title now sits at top -->
         <div class="side-card" aria-labelledby="music-title" style="height:320px; min-height:320px; max-height:320px;">
           <!-- clickable title only -->
-          <a id="music-title" class="title-link" href="https://open.spotify.com/user/shalvin.rautela" target="_blank" rel="noopener noreferrer">Music I like</a>
+          <a id="music-title" class="title-link" href="" target="_blank" rel="noopener noreferrer">Music I like</a>
           
 
           <!-- editable list: replace items below with your names and links -->
@@ -610,12 +590,27 @@
     </svg>
   </a>
 
-  <!-- MOBILE-ONLY: compact sticky music bar (placed near end so it overlays content) -->
+  <!-- MOBILE-ONLY: compact floating music button (Option A) -->
   <div class="mobile-only" aria-hidden="false">
-    <div class="mobile-music-bar" role="region" aria-label="Mobile music player">
-      <div class="mm-title">Music — tap to open</div>
-      <div>
-        <button id="mm-play" aria-label="Play music" type="button">▶</button>
+    <!-- Floating circular music button (always visible on mobile) -->
+    <button id="mm-play" class="mobile-music-button" aria-label="Open music player" type="button" title="Music — tap to open">🎵</button>
+
+    <!-- compact mobile player panel (hidden by default, toggled by the music icon) -->
+    <div id="mobilePlayerPanel" class="mobile-player-panel" aria-hidden="true" role="region" aria-label="Mobile audio player">
+      <div class="mp-row">
+        <div class="mp-title">Long Time.mp3</div>
+        <div>
+          <button id="mpClose" class="mp-close" aria-label="Close player">Close</button>
+        </div>
+      </div>
+      <div style="width:100%; margin-top:8px;">
+        <!-- Native controls used here for simplicity and broad compatibility.
+             Preload is none to avoid auto-download on page load; user opens panel to load.
+             playsinline attributes improve iOS behaviour. -->
+        <audio id="mobileAudio" controls preload="none" playsinline webkit-playsinline style="width:100%;">
+          <source src="music/Long Time.mp3" type="audio/mpeg">
+          Your browser does not support the audio element.
+        </audio>
       </div>
     </div>
   </div>
@@ -1064,6 +1059,7 @@
       // Only run mobile enhancements when viewport is small.
       if (!window.matchMedia) return;
       const mq = window.matchMedia('(max-width: 768px)');
+
       function mobileInit() {
         // mark popup to use mobile-fullscreen styles (CSS above will apply)
         const popup = document.getElementById('sh-post-popup');
@@ -1083,20 +1079,68 @@
           });
         });
 
-        // wire a small handler for the mobile music bar play button to lazy-init audio via your existing player
+        // wire a small handler for the mobile music button to open the mobile player panel
         const mmPlay = document.getElementById('mm-play');
+        const mpPanel = document.getElementById('mobilePlayerPanel');
+        const mpClose = document.getElementById('mpClose');
+        const mpAudio = document.getElementById('mobileAudio');
+
         if (mmPlay && !mmPlay.dataset.__wired) {
           mmPlay.dataset.__wired = '1';
-          mmPlay.addEventListener('click', () => {
-            // if you have a player API on window (player.js), try to use it; otherwise open spotify link as fallback
-            if (window.ShaltzPlayer && typeof window.ShaltzPlayer.toggle === 'function') {
-              window.ShaltzPlayer.toggle();
+          mmPlay.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            // Toggle the mobile panel open/closed
+            if (!mpPanel) {
+              // fallback: open spotify in new tab if panel missing
+              if (window.ShaltzPlayer && typeof window.ShaltzPlayer.toggle === 'function') {
+                window.ShaltzPlayer.toggle();
+              } else {
+                window.open('https://open.spotify.com/user/shalvin.rautela', '_blank', 'noopener');
+              }
+              return;
+            }
+            const isOpen = mpPanel.classList.contains('open');
+            if (!isOpen) {
+              mpPanel.classList.add('open');
+              mpPanel.setAttribute('aria-hidden', 'false');
+              // start loading & play audio
+              try {
+                // load only when user opens (preload none)
+                if (mpAudio && mpAudio.load) mpAudio.load();
+                if (mpAudio && typeof mpAudio.play === 'function') {
+                  // attempt to play (user gesture provided by the click on mmPlay)
+                  mpAudio.play().catch(()=>{ /* autoplay blocked, user can press play */ });
+                }
+              } catch (e) {}
             } else {
-              // fallback: open your spotify profile in a new tab to avoid autoplay
-              window.open('https://open.spotify.com/user/shalvin.rautela', '_blank', 'noopener');
+              mpPanel.classList.remove('open');
+              mpPanel.setAttribute('aria-hidden', 'true');
+              try { if (mpAudio && typeof mpAudio.pause === 'function') mpAudio.pause(); } catch (e) {}
             }
           });
         }
+
+        if (mpClose && !mpClose.dataset.__wired) {
+          mpClose.dataset.__wired = '1';
+          mpClose.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            if (mpPanel) {
+              mpPanel.classList.remove('open');
+              mpPanel.setAttribute('aria-hidden', 'true');
+            }
+            try { if (mpAudio && typeof mpAudio.pause === 'function') mpAudio.pause(); } catch (e) {}
+          });
+        }
+
+        // also close the mobile panel if orientation changes to desktop-sized to avoid leftover UI
+        const closeIfDesktop = () => {
+          if (!mq.matches && mpPanel && mpPanel.classList.contains('open')) {
+            mpPanel.classList.remove('open');
+            mpPanel.setAttribute('aria-hidden', 'true');
+            try { if (mpAudio && typeof mpAudio.pause === 'function') mpAudio.pause(); } catch (e) {}
+          }
+        };
+        window.addEventListener('resize', debounce(closeIfDesktop, 140));
       }
 
       function handleMQ(e) {
@@ -1105,12 +1149,30 @@
           // if switching to desktop, remove mobile markers to avoid interfering
           const popup = document.getElementById('sh-post-popup');
           if (popup) popup.classList.remove('mobile-fullscreen');
+
+          // also ensure any mobile player gets closed
+          const mpPanel = document.getElementById('mobilePlayerPanel');
+          const mpAudio = document.getElementById('mobileAudio');
+          if (mpPanel && mpPanel.classList.contains('open')) {
+            mpPanel.classList.remove('open');
+            mpPanel.setAttribute('aria-hidden', 'true');
+          }
+          try { if (mpAudio && typeof mpAudio.pause === 'function') mpAudio.pause(); } catch (e) {}
         }
       }
 
       // initialize on load if mobile, and listen for changes
       if (mq.matches) mobileInit();
       mq.addListener(handleMQ);
+
+      // small debounce helper inside this scope
+      function debounce(fn, ms) {
+        let t = null;
+        return function () {
+          clearTimeout(t);
+          t = setTimeout(() => fn.apply(this, arguments), ms);
+        };
+      }
     })();
   </script>
 
