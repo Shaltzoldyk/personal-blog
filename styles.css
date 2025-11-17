@@ -2,8 +2,8 @@
    SHALTZ MODE — TOXIC LIME EDITION (Option A — #b6ff00)
    Full stylesheet: theme variables, overlay, hub layout (side cards + rotator),
    mini-grid, popup, rotator, and responsive rules.
-   Updated (mobile-only): hide rotator arrows, hide floating Twitter on phones,
-   hide desktop audio player on phones, add dedicated mobile music button & panel styles.
+   Updated (mobile-only): rotator alignment fixes so image naturally aligns with the screen,
+   keep desktop untouched.
    ============================================================ */
 
 /* Toxic Lime + Red theme variables */
@@ -938,41 +938,57 @@ body::after {
     display: none !important;
   }
 
-  /* Rotator reduced size on phones and centered */
-  .rotator-frame { width: 92vw !important; max-width: 720px !important; height: auto !important; margin: 18px auto !important; }
-  .rotator-wrap { display:flex; justify-content:center; align-items:center; }
-  .rotator-inner { justify-content: center !important; align-items:center !important; padding: 0 6px; box-sizing: border-box; position: relative; }
-
-  /* === NEW MOBILE ROTATOR ALIGNMENT RULES (fix misalignment) ===
-     - Force the image to center optically inside the frame
-     - Overlay prev/next buttons inside the frame so they don't push layout
-     - Reduce heavy shadow and ensure margin:auto fallback
-  */
+  /* ----------------------------------------------------------------
+     ROTATOR: make image naturally align with the viewport on mobile
+     - Avoid inline JS positioning conflicts by making CSS authoritative
+     - Make the frame span the usable width of the screen while respecting page padding
+     - Ensure the image fills the frame horizontally and centers optically
+     ---------------------------------------------------------------- */
+  /* Use calc to respect main padding but still fill visually */
   .rotator-frame {
-    /* keep frame sizing controlled by JS, but ensure it centers */
-    margin-left: auto !important;
-    margin-right: auto !important;
+    width: calc(100% - 32px) !important;    /* fills screen minus safe gutters */
+    max-width: 100% !important;
+    height: auto !important;
+    margin: 12px auto !important;
+    padding: 0 !important;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden; /* keep image clipped to frame edges */
     box-shadow: 0 8px 20px rgba(0,0,0,0.32) !important;
-    position: relative; /* to allow internal overlay controls if needed */
-    overflow: visible; /* allow shadow/controls to be visible without clipping */
+    box-sizing: border-box;
+    background: #ffffff; /* neutral canvas so image edges read correctly */
   }
 
-  /* Image behaviour on mobile: don't stretch the image to the full container width.
-     Instead let JS set the frame size and keep the image centered using object-fit.
-     This avoids visual left-padding when the natural image contains white space. */
+  /* Ensure rotator-inner centers properly and doesn't add side offsets */
+  .rotator-inner {
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 0 8px !important;
+    margin: 0 !important;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Force image to fill frame horizontally and keep natural aspect ratio */
   .rotator-frame img#rotator {
-    width: auto !important;
-    height: 100% !important;
+    width: 100% !important;        /* fill the frame */
+    height: auto !important;       /* preserve aspect ratio */
     max-width: 100% !important;
-    object-fit: contain !important;
+    object-fit: cover !important;  /* cover yields a natural fill — change to contain if you prefer entire image visible */
     object-position: center center !important;
     display: block !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    background: #ffffff; /* ensure image canvas reads correctly against lime */
+    margin: 0 auto !important;
+    background: transparent;
+    border-radius: 4px;
   }
 
-  /* Hide rotator arrows on mobile as requested */
+  /* If you want the whole image visible (no cropping), switch to:
+     object-fit: contain !important;
+     and optionally add padding to the frame so small images don't hit edges.
+     The current default uses cover to produce a visually aligned natural fill.
+  */
+
+  /* Hide rotator arrows on mobile as requested (they caused offset issues) */
   .rot-btn,
   .rot-prev, .rot-next {
     display: none !important;

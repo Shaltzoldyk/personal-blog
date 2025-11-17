@@ -183,7 +183,7 @@
       background: #fff4;
     }
 
-    .rotator-inner { display:flex; gap:8px; align-items:center; }
+    .rotator-inner { display:flex; gap:8px; align-items:center; position:relative; }
 
     /* small responsive adjustments */
     @media (max-width: 1100px) {
@@ -247,7 +247,7 @@
       .mobile-recs summary { list-style: none; cursor: pointer; font-weight: 700; font-family: "Courier New", monospace; color: #b6ff00; padding: 6px 4px; outline: none; }
       .mobile-recs details[open] summary { box-shadow: 0 8px 22px rgba(0,0,0,0.4); }
       .mobile-recs .rec-list { margin-top: 8px; display:flex; flex-direction:column; gap:8px; }
-      .mobile-recs .rec-list a { text-decoration:none; font-family: Arial, sans-serif; color: #fff; font-size: 14px; padding: 6px 8px; border-radius: 6px; background: rgba(255,255,255,0.02); }
+      .mobile-recs .rec-list a { text-decoration:none; font-family: Arial, sans-serif; color: #fff; font-size: 14px; padding: 6px 8px; border-radius: 6px; }
 
       /* --------------------------
          MOBILE: floating circular music button (Option A)
@@ -271,7 +271,7 @@
         color: #b6ff00;
         font-size: 22px;
         cursor: pointer;
-        transition: transform 120ms ease, box-shadow 120ms ease;
+        transition: transform 120ms ease, box-shadow 120ms ease, background 160ms ease;
         -webkit-tap-highlight-color: rgba(0,0,0,0.0);
         touch-action: manipulation;
       }
@@ -324,23 +324,23 @@
         font-size: 14px;
       }
 
-      /* MOBILE: hide rotator arrows (you asked arrows not shown on mobile) */
-      .rot-btn {
-        display: none !important;
+      /* MOBILE: Force rotator frame to be responsive and centered so middle frame not clipped */
+      .rotator-frame {
+        width: calc(100% - 32px);
+        max-width: 100%;
+        min-width: 220px;
+        margin-left: auto;
+        margin-right: auto;
+        box-sizing: border-box;
+        background: #ffffff;
       }
-
-      /* hide floating twitter/x icon on mobile */
-      .floating-twitter {
-        display: none !important;
+      .rotator-frame img {
+        width: 100%;
+        height: auto;
+        display: block;
+        object-fit: cover;
       }
-
-      /* center dots under the rotator neatly */
-      .rot-dots {
-        display: flex;
-        justify-content: center;
-        gap: 8px;
-        margin-top: 10px;
-      }
+      .rotator-inner { justify-content: center; }
 
       /* remove any accidental horizontal scrolling caused by extreme shadows or wide elements */
       html, body {
@@ -457,7 +457,6 @@
         <div class="side-card" aria-labelledby="music-title" style="height:320px; min-height:320px; max-height:320px;">
           <!-- clickable title only -->
           <a id="music-title" class="title-link" href="" target="_blank" rel="noopener noreferrer">Music I like</a>
-          
 
           <!-- editable list: replace items below with your names and links -->
           <ul class="item-list" aria-label="Music items">
@@ -471,7 +470,6 @@
         <!-- Books (left-bottom) — cover removed -->
         <div class="side-card" aria-labelledby="books-title" style="height:320px; min-height:320px; max-height:320px;">
           <a id="books-title" class="title-link" href="https://www.goodreads.com/user/show/137269621-shaltz" target="_blank" rel="noopener noreferrer">Books I like</a>
-          
 
           <!-- editable book list -->
           <ul class="item-list" aria-label="Book items">
@@ -506,7 +504,6 @@
         <!-- Articles (right-top) — cover removed -->
         <div class="side-card" aria-labelledby="articles-title" style="height:320px; min-height:320px; max-height:320px;">
           <a id="articles-title" class="title-link" href="/articles.html" target="_blank" rel="noopener noreferrer">Articles I like</a>
-          
 
           <!-- editable article list -->
           <ul class="item-list" aria-label="Article items">
@@ -519,7 +516,6 @@
         <!-- Movies (right-bottom) — cover removed -->
         <div class="side-card" aria-labelledby="movies-title" style="height:320px; min-height:320px; max-height:320px;">
           <a id="movies-title" class="title-link" href="https://letterboxd.com/Shaltzzz/" target="_blank" rel="noopener noreferrer">Movies I like</a>
-        
 
           <!-- editable movie list -->
           <ul class="item-list" aria-label="Movie items">
@@ -592,8 +588,8 @@
 
   <!-- MOBILE-ONLY: compact floating music button (Option A) -->
   <div class="mobile-only" aria-hidden="false">
-    <!-- Floating circular music button (always visible on mobile) -->
-    <button id="mm-play" class="mobile-music-button" aria-label="Open music player" type="button" title="Music — tap to open">🎵</button>
+    <!-- Floating circular music button simplified so player.js can update textContent & .playing reliably -->
+    <button id="mm-play" class="mobile-music-button" aria-label="Open music player" type="button" title="Music — tap to open" aria-pressed="false">▶</button>
 
     <!-- compact mobile player panel (hidden by default, toggled by the music icon) -->
     <div id="mobilePlayerPanel" class="mobile-player-panel" aria-hidden="true" role="region" aria-label="Mobile audio player">
@@ -604,9 +600,7 @@
         </div>
       </div>
       <div style="width:100%; margin-top:8px;">
-        <!-- Native controls used here for simplicity and broad compatibility.
-             Preload is none to avoid auto-download on page load; user opens panel to load.
-             playsinline attributes improve iOS behaviour. -->
+        <!-- Native controls kept for discoverability, but we'll also sync the floating button -->
         <audio id="mobileAudio" controls preload="none" playsinline webkit-playsinline style="width:100%;">
           <source src="music/Long Time.mp3" type="audio/mpeg">
           Your browser does not support the audio element.
@@ -720,8 +714,8 @@
       if (!els.frame || !img.naturalWidth || !img.naturalHeight) return null;
       const ratio = img.naturalWidth / img.naturalHeight;
 
-      const maxWidthPx = Math.min(window.innerWidth * 0.88, 720);
-      const maxHeightPx = Math.min(window.innerHeight * 0.55, 520);
+      const maxWidthPx = Math.min(window.innerWidth * 0.98, 720);
+      const maxHeightPx = Math.min(window.innerHeight * 0.65, 720);
 
       let desiredWidth = Math.min(maxWidthPx, img.naturalWidth || maxWidthPx);
       let desiredHeight = desiredWidth / ratio;
@@ -804,8 +798,8 @@
           if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) {
             els.rot.style.objectFit = 'contain';
             els.rot.style.objectPosition = 'center center';
-            els.rot.style.width = 'auto';
-            els.rot.style.height = '100%';
+            els.rot.style.width = '100%';
+            els.rot.style.height = 'auto';
             els.rot.style.display = 'block';
             els.rot.style.marginLeft = 'auto';
             els.rot.style.marginRight = 'auto';
@@ -1085,37 +1079,89 @@
         const mpClose = document.getElementById('mpClose');
         const mpAudio = document.getElementById('mobileAudio');
 
+        // Utility to set mmPlay visual state
+        function setMMPlayingState(isPlaying) {
+          if (!mmPlay) return;
+          if (isPlaying) {
+            mmPlay.classList.add('playing');
+            mmPlay.setAttribute('aria-pressed', 'true');
+            mmPlay.textContent = '❚❚';
+            mmPlay.setAttribute('aria-label', 'Pause music');
+            mmPlay.title = 'Pause';
+          } else {
+            mmPlay.classList.remove('playing');
+            mmPlay.setAttribute('aria-pressed', 'false');
+            mmPlay.textContent = '▶';
+            mmPlay.setAttribute('aria-label', 'Open music player');
+            mmPlay.title = 'Music — tap to open';
+          }
+        }
+
+        // Ensure audio element events update the floating button
+        if (mpAudio && !mpAudio.dataset.__wiredEvents) {
+          mpAudio.dataset.__wiredEvents = '1';
+          mpAudio.addEventListener('play', () => { setMMPlayingState(true); });
+          mpAudio.addEventListener('pause', () => { setMMPlayingState(false); });
+          mpAudio.addEventListener('ended', () => { setMMPlayingState(false); });
+          // When controls are used (seek/play), ensure state reflects it
+          mpAudio.addEventListener('playing', () => { setMMPlayingState(true); });
+        }
+
         if (mmPlay && !mmPlay.dataset.__wired) {
           mmPlay.dataset.__wired = '1';
           mmPlay.addEventListener('click', (ev) => {
             ev.preventDefault();
-            // Toggle the mobile panel open/closed
-            if (!mpPanel) {
-              // fallback: open spotify in new tab if panel missing
-              if (window.ShaltzPlayer && typeof window.ShaltzPlayer.toggle === 'function') {
-                window.ShaltzPlayer.toggle();
-              } else {
-                window.open('https://open.spotify.com/user/shalvin.rautela', '_blank', 'noopener');
-              }
+
+            // If there's no panel/audio, fallback to opening your spotify/user page
+            if (!mpPanel || !mpAudio) {
+              // open external as fallback
+              window.open('https://open.spotify.com/user/shalvin.rautela', '_blank', 'noopener');
               return;
             }
+
+            // If audio is playing, toggle pause
+            const audioIsPlaying = mpAudio && !mpAudio.paused && !mpAudio.ended && mpAudio.currentTime > 0;
+            if (audioIsPlaying) {
+              try { mpAudio.pause(); } catch (e) {}
+              // leave panel open so user can press play again
+              mpPanel.classList.add('open');
+              mpPanel.setAttribute('aria-hidden', 'false');
+              return;
+            }
+
+            // If panel closed, open and try to play
             const isOpen = mpPanel.classList.contains('open');
             if (!isOpen) {
               mpPanel.classList.add('open');
               mpPanel.setAttribute('aria-hidden', 'false');
-              // start loading & play audio
               try {
-                // load only when user opens (preload none)
                 if (mpAudio && mpAudio.load) mpAudio.load();
                 if (mpAudio && typeof mpAudio.play === 'function') {
-                  // attempt to play (user gesture provided by the click on mmPlay)
-                  mpAudio.play().catch(()=>{ /* autoplay blocked, user can press play */ });
+                  mpAudio.play().catch(()=> {
+                    // autoplay policy may block — user can still press native play
+                    setMMPlayingState(false);
+                  });
                 }
-              } catch (e) {}
-            } else {
+              } catch (e) {
+                console.warn('mpAudio play failed', e);
+              }
+              return;
+            }
+
+            // If panel open and audio paused, attempt to play
+            if (isOpen && (mpAudio.paused || mpAudio.ended)) {
+              try { mpAudio.play().catch(()=> setMMPlayingState(false)); } catch (e) {}
+              return;
+            }
+
+            // fallback: toggle panel visibility
+            if (isOpen) {
               mpPanel.classList.remove('open');
               mpPanel.setAttribute('aria-hidden', 'true');
               try { if (mpAudio && typeof mpAudio.pause === 'function') mpAudio.pause(); } catch (e) {}
+            } else {
+              mpPanel.classList.add('open');
+              mpPanel.setAttribute('aria-hidden', 'false');
             }
           });
         }
@@ -1132,6 +1178,18 @@
           });
         }
 
+        // Also bind play/pause click on the audio element itself to sync mm-play promptly
+        if (mpAudio && !mpAudio.dataset.__wiredClick) {
+          mpAudio.dataset.__wiredClick = '1';
+          mpAudio.addEventListener('click', () => {
+            // Short timeout to let the playing/paused event fire; update UI conservatively
+            setTimeout(() => {
+              const playing = !mpAudio.paused && !mpAudio.ended && mpAudio.currentTime > 0;
+              setMMPlayingState(playing);
+            }, 80);
+          });
+        }
+
         // also close the mobile panel if orientation changes to desktop-sized to avoid leftover UI
         const closeIfDesktop = () => {
           if (!mq.matches && mpPanel && mpPanel.classList.contains('open')) {
@@ -1141,6 +1199,14 @@
           }
         };
         window.addEventListener('resize', debounce(closeIfDesktop, 140));
+
+        // If the page loads while audio is playing (rare), ensure button reflects it.
+        try {
+          if (mpAudio) {
+            const playing = !mpAudio.paused && !mpAudio.ended && mpAudio.currentTime > 0;
+            setMMPlayingState(playing);
+          }
+        } catch (e) {}
       }
 
       function handleMQ(e) {
@@ -1173,6 +1239,44 @@
           t = setTimeout(() => fn.apply(this, arguments), ms);
         };
       }
+    })();
+  </script>
+
+  <!-- Sync helper: ensure mm-play reflects central player state if that player exists.
+       This is a safety layer so the floating button shows pause/play correctly even when central player.js controls playback.
+  -->
+  <script>
+    (function () {
+      function syncWithCentralPlayer() {
+        const mm = document.getElementById('mm-play');
+        if (!mm) return;
+        // If the global Shaltz player exists, hook its audio events
+        if (window.__SHALTZ_PLAYER && window.__SHALTZ_PLAYER.audio) {
+          const audio = window.__SHALTZ_PLAYER.audio;
+          // avoid double-binding
+          if (audio._mmSynced) return;
+          audio._mmSynced = true;
+          audio.addEventListener('play', () => {
+            mm.classList.add('playing');
+            mm.setAttribute('aria-pressed', 'true');
+            mm.textContent = '❚❚';
+          });
+          audio.addEventListener('pause', () => {
+            mm.classList.remove('playing');
+            mm.setAttribute('aria-pressed', 'false');
+            mm.textContent = '▶';
+          });
+          audio.addEventListener('ended', () => {
+            mm.classList.remove('playing');
+            mm.setAttribute('aria-pressed', 'false');
+            mm.textContent = '▶';
+          });
+        }
+      }
+
+      document.addEventListener('sh:player-ready', syncWithCentralPlayer);
+      // attempt to run now if player already exists
+      setTimeout(syncWithCentralPlayer, 400);
     })();
   </script>
 
