@@ -1,0 +1,152 @@
+:root {
+  --bg: #05060a;
+  --glow: #00ffe1;
+  --pink: #ff4fd8;
+  --acid: #9dff00;
+  --text: #e6e6e6;
+  --muted: rgba(230,230,230,0.65);
+  --border: rgba(255,255,255,0.15);
+}
+
+/* =========================
+   GLOBAL RESET
+   ========================= */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* =========================
+   GLOBAL BACKGROUND NOISE
+   ========================= */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: url("https://grainy-gradients.vercel.app/noise.svg");
+  opacity: 0.08;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* =========================
+   CORRUPTION OVERLAY
+   subtle / eerie / occasional
+   ========================= */
+.corruption-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,0.02),
+      rgba(255,255,255,0.02) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+
+  opacity: 0.12;
+  mix-blend-mode: overlay;
+  animation: corruption-flicker 14s infinite;
+}
+
+@keyframes corruption-flicker {
+  0%   { opacity: 0.12; }
+  45%  { opacity: 0.12; }
+  48%  { opacity: 0.22; }
+  50%  { opacity: 0.08; }
+  52%  { opacity: 0.18; }
+  100% { opacity: 0.12; }
+}
+
+/* =========================
+   MEMORY GHOSTS
+   ========================= */
+.memory-ghost {
+  position: fixed;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  color: rgba(0,255,225,0.35);
+  pointer-events: none;
+  opacity: 0.6;
+  z-index: 50;
+
+  animation: ghost-drift 60s linear infinite;
+}
+
+.ghost-1 { top: 22%; left: 8%; }
+.ghost-2 { top: 64%; right: 12%; }
+.ghost-3 { bottom: 18%; left: 55%; }
+
+@keyframes ghost-drift {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-40px); }
+}
+
+/* =========================
+   LINKS
+   ========================= */
+a {
+  color: var(--glow);
+  text-decoration: none;
+}
+
+a:hover {
+  text-shadow: 0 0 6px rgba(0,255,225,0.6);
+}
+
+/* =========================
+   TEXT SELECTION
+   ========================= */
+::selection {
+  background: var(--pink);
+  color: #000;
+}
+
+/* =========================
+   GENERIC WINDOW FRAME
+   ========================= */
+.window {
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 0 20px rgba(0,255,225,0.08);
+}
+
+/* =========================
+   TERMINAL TEXT
+   ========================= */
+.terminal {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* =========================
+   SCROLLBAR (DESKTOP)
+   ========================= */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #030409;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--glow);
+}

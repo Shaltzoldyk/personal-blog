@@ -1,1284 +1,274 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Fuck it, Shaltz mode</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Fuck it, Shaltz mode</title>
 
-  <!-- FAVICON / PWA (place files in project root) -->
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-  <link rel="shortcut icon" href="/favicon.ico">
-  <link rel="manifest" href="/site.webmanifest">
-  <meta name="theme-color" content="#b6ff00">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#b6ff00">
 
-  <link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="styles.css"/>
 
-  <!-- Inline styles for the page-dim overlay + hub layout (kept here so this single-file update works immediately).
-       You can move these rules to styles.css later if you prefer. -->
-  <style>
-    /* utility hidden class (kept local-safe) */
-    .hidden { display: none !important; }
+<style>
 
-    /* full-page dim overlay */
-    #page-dim-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.35); /* medium dim for readability */
-      z-index: 995; /* should sit under the popup but above page content */
-      pointer-events: none; /* allow clicks to pass through when not active */
-      opacity: 0;
-      transition: opacity 220ms ease;
-      will-change: opacity;
-    }
+.hidden{display:none!important;}
 
-    /* when visible, intercept clicks and become active */
-    #page-dim-overlay.visible {
-      pointer-events: auto;
-      opacity: 1;
-    }
+#page-dim-overlay{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.35);
+z-index:995;
+pointer-events:none;
+opacity:0;
+transition:opacity 220ms ease;
+}
 
-    /* small accessibility hint: reduce motion for users who prefer reduced motion */
-    @media (prefers-reduced-motion: reduce) {
-      #page-dim-overlay { transition: none; }
-    }
+#page-dim-overlay.visible{
+pointer-events:auto;
+opacity:1;
+}
 
-    .site-logo {
-      width: 48px;
-      height: 48px;
-      object-fit: contain;
-      vertical-align: middle;
-      margin-right: 10px;
-      border-radius: 6px;
-      border: 2px solid rgba(255,255,255,0.06);
-    }
+.site-logo{
+width:48px;
+height:48px;
+object-fit:contain;
+vertical-align:middle;
+margin-right:10px;
+border-radius:6px;
+border:2px solid rgba(255,255,255,0.06);
+}
 
-    .header-brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
+.header-brand{
+display:inline-flex;
+align-items:center;
+gap:8px;
+}
 
-    /* --------------------------
-       HUB LAYOUT: side cards + centered rotator
-       -------------------------- */
-    .hub {
-      max-width: 1100px;
-      margin: 18px auto;
-      padding: 0 16px;
-      display: grid;
-      grid-template-columns: 260px 1fr 260px;
-      gap: 18px;
-      align-items: start;
-    }
+.hub{
+max-width:1100px;
+margin:18px auto;
+padding:0 16px;
+display:grid;
+grid-template-columns:260px 1fr 260px;
+gap:18px;
+align-items:start;
+}
 
-    /* left / right stacked cards container */
-    .side-cards {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      align-items: stretch;
-    }
+.side-cards{
+display:flex;
+flex-direction:column;
+gap:16px;
+}
 
-    /* card (now a neutral container DIV, not an anchor) */
-    .side-card {
-      background: linear-gradient(180deg, #0a0a0a, #080808);
-      border-radius: 8px;
-      border: 6px solid #fff;
-      padding: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.45);
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      align-items: center;
-      color: #dfe;
-      transition: transform 160ms ease, box-shadow 160ms ease;
-      position: relative;
-    }
+.side-card{
+background:linear-gradient(180deg,#0a0a0a,#080808);
+border-radius:8px;
+border:6px solid #fff;
+padding:12px;
+box-shadow:0 10px 30px rgba(0,0,0,0.45);
+display:flex;
+flex-direction:column;
+gap:10px;
+align-items:center;
+color:#dfe;
+transition:transform 160ms ease;
+}
 
-    .side-card:focus-within,
-    .side-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 18px 48px rgba(0,0,0,0.6), 0 0 28px rgba(182,255,0,0.06);
-      outline: none;
-    }
+.side-card:hover{
+transform:translateY(-6px);
+}
 
-    /* This is the clickable title inside the card. Only this element is an anchor. */
-    .side-card .title-link {
-      display: inline-block;
-      margin-top: 6px;
-      font-family: "Courier New", monospace;
-      font-weight: 700;
-      color: #b6ff00;
-      text-decoration: underline;
-      text-underline-offset: 4px;
-      padding: 6px 10px;
-      border-radius: 6px;
-      background: rgba(0,0,0,0.02);
-    }
+.title-link{
+font-family:"Courier New",monospace;
+font-weight:700;
+color:#b6ff00;
+text-decoration:underline;
+}
 
-    .side-card .title-link:hover,
-    .side-card .title-link:focus {
-      background: rgba(182,255,0,0.03);
-      outline: none;
-      box-shadow: 0 0 18px rgba(182,255,0,0.04);
-    }
+.item-list{
+width:100%;
+list-style:none;
+padding:6px;
+display:flex;
+flex-direction:column;
+gap:8px;
+}
 
-    .side-card .sub {
-      font-size: 12px;
-      color: rgba(255,255,255,0.8);
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin-bottom: 6px;
-    }
+.item-list li a{
+color:white;
+text-decoration:none;
+font-family:"Courier New",monospace;
+font-size:14px;
+}
 
-    /* list of names under each card */
-    .side-card .item-list {
-      width: 100%;
-      margin: 0;
-      padding: 6px 8px;
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      align-items: start;
-      flex: 1 1 auto;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
+.item-list li a:hover{
+color:#b6ff00;
+}
 
-    .side-card .item-list li a {
-      color: rgba(255,255,255,0.9);
-      text-decoration: none;
-      font-family: "Courier New", monospace;
-      font-size: 14px;
-      padding: 4px 6px;
-      border-radius: 4px;
-      display: inline-block;
-    }
+.center-posts{
+background:#000;
+border:4px solid #b6ff00;
+border-radius:8px;
+padding:30px;
+min-height:360px;
+box-shadow:0 12px 40px rgba(0,0,0,0.4);
+text-align:center;
+}
 
-    .side-card .item-list li a:hover,
-    .side-card .item-list li a:focus {
-      color: #fff;
-      background: rgba(182,255,0,0.04);
-      outline: none;
-    }
+.center-posts ul{
+list-style:none;
+padding:0;
+margin-top:20px;
+display:flex;
+flex-direction:column;
+gap:20px;
+}
 
-    .hub-rotator {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      align-items: center;
-      justify-content: flex-start;
-    }
+.center-posts a{
+font-family:"Courier New",monospace;
+font-size:20px;
+color:#b6ff00;
+text-decoration:none;
+}
 
-    .rotator-frame {
-      max-width: 100%;
-      border: 4px solid #b6ff00;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
-      transition: width 260ms ease, height 260ms ease;
-      background: #fff4;
-    }
+.center-posts a:hover{
+text-shadow:0 0 10px #b6ff00;
+}
 
-    .rotator-inner { display:flex; gap:8px; align-items:center; position:relative; }
+@media(max-width:860px){
+.hub{
+grid-template-columns:1fr;
+}
 
-    /* small responsive adjustments */
-    @media (max-width: 1100px) {
-      .hub { grid-template-columns: 220px 1fr 220px; gap: 12px; padding: 0 12px; }
-      .side-card { padding: 10px; }
-    }
+.side-cards{
+flex-direction:row;
+overflow-x:auto;
+}
 
-    @media (max-width: 860px) {
-      .hub {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto;
-      }
-      .side-cards {
-        flex-direction: row;
-        gap: 12px;
-        overflow-x: auto;
-        padding: 8px 0;
-      }
-      .side-card { min-width: 180px; flex: 0 0 180px; }
-      .hub-rotator { order: -1; margin-bottom: 8px; }
-    }
+.center-posts{
+margin:20px 0;
+}
+}
 
-    /* --------------------------
-       Title embedded link (Shaltz) - subtle hover glow
-       -------------------------- */
-    .title-embedded-link {
-      color: #b6ff00;
-      text-decoration: none;
-      transition: text-shadow 0.2s ease, opacity 0.2s ease;
-      cursor: pointer;
-    }
-    .title-embedded-link:hover,
-    .title-embedded-link:focus {
-      text-shadow: 0 0 8px #b6ff00, 0 0 14px #b6ff00;
-      opacity: 1;
-      outline: none;
-    }
-
-    /* --------------------------
-       MOBILE-ONLY: basic scaffolding (non-destructive)
-       - Hidden by default; shown only under the mobile media query below.
-       - Minimal styles here so desktop is untouched. I'll add more refined styles in styles.css next.
-       -------------------------- */
-    .mobile-only { display: none !important; }
-
-    /* ============================
-       MOBILE SCOPED OVERRIDES
-       - Keep this minimal and non-destructive.
-       - Do NOT hide .hub, .post-list, .sh-terminal, etc. (that caused the issue).
-       ============================ */
-    @media (max-width: 768px) {
-      /* show mobile-only elements on small screens only */
-      .mobile-only { display: block !important; }
-
-      /* mild layout stacking for small screens without hiding desktop blocks */
-      .hub { padding: 0 12px; gap: 12px; grid-template-columns: 1fr; }
-
-      /* recommendations accordion default reset */
-      .mobile-recs { margin: 12px 0; padding: 0 6px; }
-      .mobile-recs details { background: linear-gradient(180deg,#0b0b0b,#070707); border-radius: 8px; margin-bottom: 8px; padding: 8px; border: 2px solid rgba(182,255,0,0.06); }
-      .mobile-recs summary { list-style: none; cursor: pointer; font-weight: 700; font-family: "Courier New", monospace; color: #b6ff00; padding: 6px 4px; outline: none; }
-      .mobile-recs details[open] summary { box-shadow: 0 8px 22px rgba(0,0,0,0.4); }
-      .mobile-recs .rec-list { margin-top: 8px; display:flex; flex-direction:column; gap:8px; }
-      .mobile-recs .rec-list a { text-decoration:none; font-family: Arial, sans-serif; color: #fff; font-size: 14px; padding: 6px 8px; border-radius: 6px; }
-
-      /* --------------------------
-         MOBILE: floating circular music button (Option A)
-         - Always visible on mobile, small, non-obstructive, bottom-right.
-         - Tapping it opens the player panel above the button.
-         -------------------------- */
-      .mobile-music-button {
-        position: fixed;
-        right: 14px;
-        bottom: 14px;
-        z-index: 1300;
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(180deg, rgba(0,0,0,0.95), rgba(0,0,0,0.86));
-        border: 2px solid rgba(182,255,0,0.12);
-        box-shadow: 0 10px 28px rgba(0,0,0,0.6);
-        color: #b6ff00;
-        font-size: 22px;
-        cursor: pointer;
-        transition: transform 120ms ease, box-shadow 120ms ease, background 160ms ease;
-        -webkit-tap-highlight-color: rgba(0,0,0,0.0);
-        touch-action: manipulation;
-      }
-      .mobile-music-button:active { transform: scale(.98); }
-      .mobile-music-button:focus { outline: 3px solid rgba(182,255,0,0.12); outline-offset: 3px; }
-
-      /* hidden by default (keeps DOM ready without visual clutter) */
-      .mobile-player-panel {
-        position: fixed;
-        left: 12px;
-        right: 12px;
-        bottom: 86px; /* sits above the circular button */
-        z-index: 1250;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-        padding: 12px;
-        border-radius: 12px;
-        background: linear-gradient(180deg, rgba(0,0,0,0.95), rgba(0,0,0,0.88));
-        border: 1px solid rgba(182,255,0,0.08);
-        box-shadow: 0 12px 36px rgba(0,0,0,0.6);
-      }
-      .mobile-player-panel.open {
-        display: flex;
-        flex-direction: column;
-      }
-      .mobile-player-panel .mp-row {
-        width: 100%;
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        justify-content: space-between;
-      }
-      .mobile-player-panel .mp-title {
-        font-family: Arial, sans-serif;
-        color: #b6ff00;
-        font-size: 14px;
-        font-weight: 700;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .mobile-player-panel .mp-close {
-        background: none;
-        border: 1px solid rgba(182,255,0,0.06);
-        color: #b6ff00;
-        padding: 6px 8px;
-        border-radius: 8px;
-        font-size: 14px;
-      }
-
-      /* MOBILE: Force rotator frame to be responsive and centered so middle frame not clipped */
-      .rotator-frame {
-        width: calc(100% - 32px);
-        max-width: 100%;
-        min-width: 220px;
-        margin-left: auto;
-        margin-right: auto;
-        box-sizing: border-box;
-        background: #ffffff;
-      }
-      .rotator-frame img {
-        width: 100%;
-        height: auto;
-        display: block;
-        object-fit: cover;
-      }
-      .rotator-inner { justify-content: center; }
-
-      /* remove any accidental horizontal scrolling caused by extreme shadows or wide elements */
-      html, body {
-        overflow-x: hidden;
-        -webkit-overflow-scrolling: touch;
-      }
-
-      /* tweak side-cards padding on phones (they become horizontal scroller) */
-      .side-cards {
-        padding-left: 6px;
-        padding-right: 6px;
-      }
-
-      /* ensure audio-related elements appear above external players */
-      .player, .audio-player, .floating-player, audio {
-        z-index: 1050 !important;
-      }
-
-      /* adjust post-list spacing and ensure it doesn't sit under the music UI */
-      .post-list.centered {
-        padding: 0 12px 220px; /* big bottom padding to fully avoid overlap with sticky UI */
-      }
-
-      /* make popup topbar sticky so close button remains accessible */
-      #sh-post-popup.mobile-fullscreen .sh-popup-topbar {
-        position: sticky;
-        top: 0;
-        z-index: 1600;
-        background: linear-gradient(transparent, rgba(0,0,0,0.05));
-      }
-
-      /* ensure interactive elements are comfortably tappable */
-      .title-link, .mobile-music-button, .rot-btn {
-        touch-action: manipulation;
-      }
-
-    }
-
-    /* small accessibility hint: reduce motion for users who prefer reduced motion */
-    @media (prefers-reduced-motion: reduce) {
-      .mobile-recs details, .mobile-music-button, .rotator-frame { transition: none !important; }
-    }
-
-  </style>
+</style>
 </head>
+
 <body>
 
-  <!-- Bright top banner -->
-  <header class="old-header" role="banner" aria-label="site banner">
-    <div class="header-brand">
-      <img src="/favicon-32x32.png" alt="site logo" class="site-logo" onerror="this.style.display='none'">
-      <div>
-        <h1 class="old-site-title">Fuck it, <a href="https://twitter.com/YouShallWin" class="title-embedded-link" target="_blank" rel="noopener noreferrer">Shaltz</a> mode</h1>
-        <!-- removed separate @YouShallWin line as requested -->
-      </div>
-    </div>
-    <div class="old-sep" aria-hidden="true"></div>
-    <div class="old-marquee" aria-hidden="true">Life is short, go long to hedge</div>
-  </header>
-
-  <!-- main-content is the PJAX replace target -->
-  <main id="main-content" role="main">
-
-    <!-- MOBILE-ONLY: compact recommendations (accordion-style) -->
-    <!-- This block is intentionally mobile-only; it's hidden on desktop by CSS above -->
-    <div class="mobile-only" aria-hidden="false">
-      <div class="mobile-recs" aria-label="Mobile recommendations - Books, Articles, Movies, Music">
-        <details id="m-books">
-          <summary>Books I like</summary>
-          <div class="rec-list" aria-hidden="false">
-            <!-- mirrored from desktop book list (shortened for mobile) -->
-            <a href="https://www.goodreads.com/book/show/60643059-the-network-state?ref=nav_sb_ss_1_17" target="_blank" rel="noopener noreferrer">The newtwork state - Balaji Srinivasan</a>
-            <a href="https://www.goodreads.com/book/show/38315.Fooled_by_Randomness?ac=1&from_search=true&qid=1ShEIgN8WA&rank=1" target="_blank" rel="noopener noreferrer">Fooled by randomness- Nassim Taleb</a>
-            <a href="https://www.goodreads.com/book/show/placeholder3" target="_blank" rel="noopener noreferrer"></a>
-            <a href="https://www.goodreads.com/book/show/placeholder4" target="_blank" rel="noopener noreferrer"></a>
-          </div>
-        </details>
-
-        <details id="m-articles">
-          <summary>Articles I like</summary>
-          <div class="rec-list" aria-hidden="false">
-            <a href="https://oldcoinbad.com/p/long-degeneracy" target="_blank" rel="noopener noreferrer">Long Degeneracy — Jez</a>
-            <a href="https://0xltr.substack.com/p/what-could-go-right" target="_blank" rel="noopener noreferrer">What could go right? - LTR</a>
-            <a href="https://vitalik.eth.limo/general/2024/04/01/dc.html" target="_blank" rel="noopener noreferrer">Degen communism - Vitalik</a>
-          </div>
-        </details>
-
-        <details id="m-movies">
-          <summary>Movies I like</summary>
-          <div class="rec-list" aria-hidden="false">
-            <a href="https://letterboxd.com/film/wild-strawberries/" target="_blank" rel="noopener noreferrer">Wild strawberries</a>
-            <a href="https://letterboxd.com/film/fight-club/" target="_blank" rel="noopener noreferrer">Fight club</a>
-            <a href="https://letterboxd.com/film/persona/" target="_blank" rel="noopener noreferrer">Persona</a>
-          </div>
-        </details>
-
-        <details id="m-music">
-          <summary>Music I like</summary>
-          <div class="rec-list" aria-hidden="false">
-            <a href="https://open.spotify.com/album/4Uv86qWpGTxf7fU7lG5X6F?si=g8roBSX-Q4uA9UhwmD6xbw" target="_blank" rel="noopener noreferrer">The college dropout - Ye</a>
-            <a href="https://open.spotify.com/album/3b4E89rxzZQ9zkhgKpj8N4?si=QZJ4BwTaQiqXg8sVBaARcg" target="_blank" rel="noopener noreferrer">Animals — Pink Floyd</a>
-            <a href="https://open.spotify.com/album/77CZUF57sYqgtznUe3OikQ?si=Yq5ZQOrzT6GcRkvg_b5Mdw" target="_blank" rel="noopener noreferrer">I love my computer - Ninajirachi</a>
-          </div>
-        </details>
-      </div>
-    </div>
-
-    <!-- HUB: left cards (2) + center rotator + right cards (2) -->
-    <section class="hub" aria-label="Featured">
-
-      <!-- LEFT column: 2 stacked cards -->
-      <div class="side-cards" aria-hidden="false">
-        <!-- Music (left-top) — cover removed, title now sits at top -->
-        <div class="side-card" aria-labelledby="music-title" style="height:320px; min-height:320px; max-height:320px;">
-          <!-- clickable title only -->
-          <a id="music-title" class="title-link" href="" target="_blank" rel="noopener noreferrer">Music I like</a>
-
-          <!-- editable list: replace items below with your names and links -->
-          <ul class="item-list" aria-label="Music items">
-            <li><a href="https://open.spotify.com/album/3b4E89rxzZQ9zkhgKpj8N4?si=QZJ4BwTaQiqXg8sVBaARcg" target="_blank" rel="noopener noreferrer">Animals — Pink Floyd</a></li>
-            <li><a href="https://open.spotify.com/album/77CZUF57sYqgtznUe3OikQ?si=Yq5ZQOrzT6GcRkvg_b5Mdw" target="_blank" rel="noopener noreferrer">I love my computer - Ninajirachi</a></li>
-            <li><a href="https://open.spotify.com/album/4Uv86qWpGTxf7fU7lG5X6F?si=oMB7dgk4RvCe8i5MDEGxlA" target="_blank" rel="noopener noreferrer">The college dropout - Ye</a></li>
-            <li><a href="https://open.spotify.com/album/6QaVfG1pHYl1z15ZxkvVDW?si=oc_LcYehQJCaa9OKux4mQw" target="_blank" rel="noopener noreferrer">Sgt. Pepper's lonely hearts club band - The Beatles</a></li>
-          </ul>
-        </div>
-
-        <!-- Books (left-bottom) — cover removed -->
-        <div class="side-card" aria-labelledby="books-title" style="height:320px; min-height:320px; max-height:320px;">
-          <a id="books-title" class="title-link" href="https://www.goodreads.com/user/show/137269621-shaltz" target="_blank" rel="noopener noreferrer">Books I like</a>
-
-          <!-- editable book list -->
-          <ul class="item-list" aria-label="Book items">
-            <li><a href="https://www.goodreads.com/book/show/placeholder1" target="_blank" rel="noopener noreferrer"></a></li>
-            <li><a href="https://www.goodreads.com/book/show/placeholder2" target="_blank" rel="noopener noreferrer"></a></li>
-            <li><a href="https://www.goodreads.com/book/show/placeholder3" target="_blank" rel="noopener noreferrer"></a></li>
-            <li><a href="https://www.goodreads.com/book/show/placeholder4" target="_blank" rel="noopener noreferrer"></a></li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- CENTER: rotator -->
-      <div class="hub-rotator" role="region" aria-label="Image rotator">
-        <section class="rotator-wrap" aria-live="polite" aria-label="image rotator">
-          <div class="rotator-inner">
-            <button class="rot-btn rot-prev" aria-label="Previous image" type="button">◀</button>
-
-            <!-- frame that will be sized dynamically by JS -->
-            <div class="rotator-frame" id="rotFrame" role="group" aria-roledescription="image frame" aria-label="Rotating images">
-              <img id="rotator" src="images/luck.jpeg" alt="rotating image" />
-            </div>
-
-            <button class="rot-btn rot-next" aria-label="Next image" type="button">▶</button>
-          </div>
-
-          <div class="rot-dots" id="rotDots" aria-hidden="false" aria-label="image indicators"></div>
-        </section>
-      </div>
-
-      <!-- RIGHT column: 2 stacked cards -->
-      <div class="side-cards" aria-hidden="false">
-        <!-- Articles (right-top) — cover removed -->
-        <div class="side-card" aria-labelledby="articles-title" style="height:320px; min-height:320px; max-height:320px;">
-          <a id="articles-title" class="title-link" href="/articles.html" target="_blank" rel="noopener noreferrer">Articles I like</a>
-
-          <!-- editable article list -->
-          <ul class="item-list" aria-label="Article items">
-            <li><a href="https://oldcoinbad.com/p/long-degeneracy" target="_blank" rel="noopener noreferrer">Long Degeneracy — Jez</a></li>
-            <li><a href="https://0xltr.substack.com/p/what-could-go-right" target="_blank" rel="noopener noreferrer">What could go right? - LTR</a></li>
-            <li><a href="https://vitalik.eth.limo/general/2024/04/01/dc.html" target="_blank" rel="noopener noreferrer">Degen communism - Vitalik</a></li>
-          </ul>
-        </div>
-
-        <!-- Movies (right-bottom) — cover removed -->
-        <div class="side-card" aria-labelledby="movies-title" style="height:320px; min-height:320px; max-height:320px;">
-          <a id="movies-title" class="title-link" href="https://letterboxd.com/Shaltzzz/" target="_blank" rel="noopener noreferrer">Movies I like</a>
-
-          <!-- editable movie list -->
-          <ul class="item-list" aria-label="Movie items">
-            <li><a href="https://letterboxd.com/film/wild-strawberries/" target="_blank" rel="noopener noreferrer">Wild strawberries</a></li>
-            <li><a href="https://letterboxd.com/film/fight-club/" target="_blank" rel="noopener noreferrer">Fight club</a></li>
-            <li><a href="https://letterboxd.com/film/persona/" target="_blank" rel="noopener noreferrer">Persona</a></li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- Centered post list (below hub on wide screens) -->
-    <section class="post-list centered" aria-label="posts" style="margin-top:22px;">
-      <h2 class="post-heading">Tried thinking, this is what I came up with:</h2>
-      <ul>
-        <li><a href="posts/trade-framework.html" class="neon-link post-link" data-title="The Future Is a Trade">The trade framework</a></li>
-        <li><a href="posts/doom-part1.html" class="neon-link post-link" data-title="Doom — Part 1">Doom Part 1</a></li>
-      </ul>
-    </section>
-
-  </main>
-
-  <!-- Mini-opener (keeps small visual control if the player/popup interact) -->
-  <div id="mini-opener" class="mini-opener hidden" role="dialog" aria-hidden="true" aria-label="mini opener">
-    <div class="mini-bar" id="miniBar" aria-hidden="false">
-      <button class="mini-close" id="miniClose" aria-label="Close mini opener" type="button">&times;</button>
-    </div>
-    <div class="mini-content" id="miniContent">
-      <img src="" alt="" id="miniImage" />
-    </div>
-  </div>
-
-  <!-- Page dim overlay (sits above page but below popup) -->
-  <div id="page-dim-overlay" class="hidden" aria-hidden="true"></div>
-
-  <!-- Post popup overlay (ensures posts open in popup with black backdrop) -->
-  <div id="sh-post-popup" class="hidden" role="dialog" aria-hidden="true" aria-modal="true" aria-label="Post content">
-    <div class="sh-popup-backdrop" id="shPopupBackdrop" tabindex="-1" data-close="backdrop"></div>
-
-    <div class="sh-popup-outer-frame" id="shPopupOuter" role="document" aria-live="polite">
-      <div class="sh-popup-window">
-        <div class="sh-popup-topbar">
-          <button class="sh-popup-close" id="shPopupClose" aria-label="Close post">&times;</button>
-        </div>
-
-        <div class="sh-popup-body" id="shPopupBody" tabindex="0">
-          <!-- fetched post HTML will be injected here -->
-          <div class="sh-popup-loading" id="shPopupLoading">loading…</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Terminal-style footer -->
-  <footer class="sh-terminal" role="contentinfo" aria-label="site terminal">
-    <div class="line">user@shaltz:~$ echo "i love you anon, never kys"</div>
-    <div class="line">links: [ <a class="neon-link post-link" href="posts/trade-framework.html" data-title="The Future Is a Trade">trade-framework</a> ]  [ <a class="neon-link post-link" href="posts/doom-part1.html" data-title="Doom — Part 1">doom-part1</a> ]</div>
-  </footer>
-
-  <!-- CRT overlay for subtle retro feel -->
-  <div class="crt-overlay" aria-hidden="true"></div>
-
-  <!-- Floating Twitter/X corner icon (keeps visual subtle and unobtrusive) -->
-  <a href="https://twitter.com/YouShallWin" class="floating-twitter" target="_blank" rel="noopener noreferrer" aria-label="Follow @YouShallWin on X (Twitter)">
-    <!-- SVG icon uses currentColor so it matches the color defined in CSS -->
-    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false" role="img">
-      <path fill="currentColor" d="M22.46 6c-.77.35-1.6.58-2.46.69a4.28 4.28 0 0 0 1.88-2.36 8.53 8.53 0 0 1-2.7 1.03 4.26 4.26 0 0 0-7.27 3.88A12.09 12.09 0 0 1 3.15 4.6a4.26 4.26 0 0 0 1.32 5.68 4.24 4.24 0 0 1-1.93-.53v.05a4.26 4.26 0 0 0 3.42 4.18c-.48.13-.98.2-1.5.2-.37 0-.73-.04-1.08-.1a4.27 4.27 0 0 0 3.98 2.96A8.55 8.55 0 0 1 2 19.54a12.07 12.07 0 0 0 6.54 1.92c7.86 0 12.16-6.51 12.16-12.16v-.55A8.7 8.7 0 0 0 24 5.13a8.38 8.38 0 0 1-2.37.65z"/>
-    </svg>
-  </a>
-
-  <!-- MOBILE-ONLY: compact floating music button (Option A) -->
-  <div class="mobile-only" aria-hidden="false">
-    <!-- Floating circular music button simplified so player.js can update textContent & .playing reliably -->
-    <button id="mm-play" class="mobile-music-button" aria-label="Open music player" type="button" title="Music — tap to open" aria-pressed="false">▶</button>
-
-    <!-- compact mobile player panel (hidden by default, toggled by the music icon) -->
-    <div id="mobilePlayerPanel" class="mobile-player-panel" aria-hidden="true" role="region" aria-label="Mobile audio player">
-      <div class="mp-row">
-        <div class="mp-title">Long Time.mp3</div>
-        <div>
-          <button id="mpClose" class="mp-close" aria-label="Close player">Close</button>
-        </div>
-      </div>
-      <div style="width:100%; margin-top:8px;">
-        <!-- Native controls kept for discoverability, but we'll also sync the floating button -->
-        <audio id="mobileAudio" controls preload="none" playsinline webkit-playsinline style="width:100%;">
-          <source src="music/Long Time.mp3" type="audio/mpeg">
-          Your browser does not support the audio element.
-        </audio>
-      </div>
-    </div>
-  </div>
-
-  <!-- Scripts: player -> post-popup -> pjax (order matters) -->
-  <script src="js/player.js" defer></script>
-  <script src="js/post-popup.js" defer></script>
-  <script src="js/pjax.js" defer></script>
-
-  <!-- Rotator script (sizes frame automatically, shows full images, pauses on hover)
-       Updated to expose a re-init function and avoid duplicate handlers when PJAX replaces content.
-       Added a small JS fallback that forces centering (margin:auto) on mobile after size changes.
-       Additionally: compute button positions in pixels for mobile so arrows sit inside the frame.
-  -->
-  <script>
-  (function () {
-    // Image list
-    const rotImgs = [
-      'images/luck.jpeg',
-      'images/get-a-load.jpeg',
-      'images/hellyah.jpeg',
-      'images/gojo.jpeg',
-      'images/music-listernoor.jpeg',
-      'images/teleport.jpeg',
-      'images/wolf.jpeg',
-      'images/toji-gojo.jpeg',
-      'images/one-life.jpeg'
-    ];
-
-    const AUTO_MS = 3000;
-
-    // State that survives re-inits (on window so PJAX-replaced pages can call)
-    window.__SHALTZ_ROTATOR = window.__SHALTZ_ROTATOR || {};
-    const R = window.__SHALTZ_ROTATOR;
-
-    // Initialize defaults if not present
-    if (!R.inited) {
-      R.rotIndex = 0;
-      R.rotTimer = null;
-      R.initializedOnce = false;
-    }
-
-    // DOM refs (may change after PJAX swaps)
-    function getEls() {
-      return {
-        rot: document.getElementById('rotator'),
-        frame: document.getElementById('rotFrame'),
-        dotsContainer: document.getElementById('rotDots'),
-        btnNext: document.querySelector('.rot-next'),
-        btnPrev: document.querySelector('.rot-prev')
-      };
-    }
-
-    function clearPrevious() {
-      // stop timer
-      if (R.rotTimer) {
-        clearInterval(R.rotTimer);
-        R.rotTimer = null;
-      }
-      // remove dots (so we can rebuild)
-      const els = getEls();
-      if (els.dotsContainer) {
-        els.dotsContainer.innerHTML = '';
-      }
-      // remove visible class from image (if exists)
-      if (els.rot) {
-        els.rot.classList.remove('visible');
-      }
-      // clear inline button positioning that may have been applied previously
-      if (els.btnPrev) {
-        els.btnPrev.style.left = '';
-        els.btnPrev.style.right = '';
-        els.btnPrev.style.position = '';
-      }
-      if (els.btnNext) {
-        els.btnNext.style.left = '';
-        els.btnNext.style.right = '';
-        els.btnNext.style.position = '';
-      }
-    }
-
-    function buildDots() {
-      const els = getEls();
-      if (!els.dotsContainer) return;
-      els.dotsContainer.innerHTML = '';
-      rotImgs.forEach((_, i) => {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'rot-dot';
-        b.dataset.index = i;
-        b.title = 'Go to image ' + (i+1);
-        b.addEventListener('click', () => { show(i); resetTimer(); });
-        els.dotsContainer.appendChild(b);
-      });
-    }
-
-    function highlightDot(i) {
-      const els = getEls();
-      if (!els.dotsContainer) return;
-      const dots = els.dotsContainer.querySelectorAll('.rot-dot');
-      dots.forEach((d, idx) => d.classList.toggle('active', idx === i));
-    }
-
-    // Returns an object {w:width, h:height} or null
-    function sizeFrameToImage(img) {
-      const els = getEls();
-      if (!els.frame || !img.naturalWidth || !img.naturalHeight) return null;
-      const ratio = img.naturalWidth / img.naturalHeight;
-
-      const maxWidthPx = Math.min(window.innerWidth * 0.98, 720);
-      const maxHeightPx = Math.min(window.innerHeight * 0.65, 720);
-
-      let desiredWidth = Math.min(maxWidthPx, img.naturalWidth || maxWidthPx);
-      let desiredHeight = desiredWidth / ratio;
-
-      if (desiredHeight > maxHeightPx) {
-        desiredHeight = maxHeightPx;
-        desiredWidth = desiredHeight * ratio;
-      }
-
-      els.frame.style.width = Math.round(desiredWidth) + 'px';
-      els.frame.style.height = Math.round(desiredHeight) + 'px';
-
-      // ensure box-sizing and centering for robustness
-      els.frame.style.boxSizing = 'border-box';
-      els.frame.style.marginLeft = 'auto';
-      els.frame.style.marginRight = 'auto';
-
-      return { w: Math.round(desiredWidth), h: Math.round(desiredHeight) };
-    }
-
-    function positionButtonsInsideFrame(frameSize) {
-      // Only run on mobile-sized viewports to avoid desktop changes
-      try {
-        if (!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches)) return;
-        const els = getEls();
-        if (!els.frame) return;
-        const prev = els.btnPrev;
-        const next = els.btnNext;
-        if (!prev || !next) return;
-
-        // compute left edge of centered frame
-        const winW = window.innerWidth;
-        const frameW = frameSize && frameSize.w ? frameSize.w : els.frame.getBoundingClientRect().width;
-        const leftEdge = Math.max(0, Math.round((winW - frameW) / 2));
-
-        // measure button width (fallback to 48)
-        const btnRect = prev.getBoundingClientRect();
-        const btnW = Math.round(btnRect.width) || 48;
-        const offsetMargin = 8; // small inset from frame edge
-
-        // position prev absolutely inside the viewport so it sits visually flush
-        prev.style.position = 'absolute';
-        prev.style.top = '50%';
-        prev.style.transform = 'translateY(-50%)';
-        prev.style.left = (leftEdge + offsetMargin) + 'px';
-        prev.style.right = 'auto';
-        prev.style.zIndex = '12';
-
-        // position next at the right edge inside the frame
-        next.style.position = 'absolute';
-        next.style.top = '50%';
-        next.style.transform = 'translateY(-50%)';
-        next.style.left = (leftEdge + frameW - btnW - offsetMargin) + 'px';
-        next.style.right = 'auto';
-        next.style.zIndex = '12';
-      } catch (e) {
-        // swallow any errors — this is only a nicety for mobile alignment
-        console.warn('positionButtonsInsideFrame failed', e);
-      }
-    }
-
-    function show(i) {
-      R.rotIndex = (i + rotImgs.length) % rotImgs.length;
-      const els = getEls();
-      if (!els.rot) return;
-
-      // hide for transition
-      els.rot.classList.remove('visible');
-
-      const preload = new Image();
-      preload.src = rotImgs[R.rotIndex];
-      preload.onload = function () {
-        // size frame to the new image and get computed size
-        const frameSize = sizeFrameToImage(preload);
-
-        // set img attributes and ensure object-fit/position for mobile
-        try {
-          els.rot.src = preload.src;
-          els.rot.alt = 'image ' + (R.rotIndex + 1);
-          if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) {
-            els.rot.style.objectFit = 'contain';
-            els.rot.style.objectPosition = 'center center';
-            els.rot.style.width = '100%';
-            els.rot.style.height = 'auto';
-            els.rot.style.display = 'block';
-            els.rot.style.marginLeft = 'auto';
-            els.rot.style.marginRight = 'auto';
-            // ensure parent is flex-centered
-            if (els.frame && els.frame.parentElement) {
-              els.frame.parentElement.style.display = 'flex';
-              els.frame.parentElement.style.justifyContent = 'center';
-              els.frame.parentElement.style.alignItems = 'center';
-            }
-          } else {
-            // desktop defaults
-            els.rot.style.width = '';
-            els.rot.style.height = '';
-            els.rot.style.objectFit = '';
-            els.rot.style.objectPosition = '';
-          }
-        } catch (e) { /* ignore */ }
-
-        // trigger visible class after a reflow
-        void els.rot.offsetWidth;
-        els.rot.classList.add('visible');
-
-        highlightDot(R.rotIndex);
-
-        // Mobile JS fallback centering & button placement
-        try {
-          if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) {
-            // frame margins were set in sizeFrameToImage, but force a tiny vertical margin too
-            if (els.frame && els.frame.style) {
-              els.frame.style.marginTop = els.frame.style.marginTop || '18px';
-              els.frame.style.marginBottom = els.frame.style.marginBottom || '18px';
-            }
-            // explicitly position previous/next inside the frame using absolute pixels
-            positionButtonsInsideFrame(frameSize);
-          } else {
-            // clear any mobile absolute positioning if present
-            if (els.btnPrev) { els.btnPrev.style.position = ''; els.btnPrev.style.left = ''; els.btnPrev.style.right = ''; els.btnPrev.style.transform = ''; }
-            if (els.btnNext) { els.btnNext.style.position = ''; els.btnNext.style.left = ''; els.btnNext.style.right = ''; els.btnNext.style.transform = ''; }
-          }
-        } catch (e) {
-          console.warn('rotator mobile centering fallback failed', e);
-        }
-      };
-
-      // defensive: if preload fails to load quickly, ensure the frame doesn't stay empty forever
-      preload.onerror = function () {
-        // keep previous image if any, otherwise clear visible class
-        highlightDot(R.rotIndex);
-      };
-    }
-
-    function next() { show(R.rotIndex + 1); }
-    function prev() { show(R.rotIndex - 1); }
-
-    function resetTimer() {
-      if (R.rotTimer) clearInterval(R.rotTimer);
-      R.rotTimer = setInterval(next, AUTO_MS);
-    }
-
-    // Public init that can be called after PJAX swaps
-    function init() {
-      // Defensive cleanup if re-running
-      clearPrevious();
-
-      const els = getEls();
-
-      buildDots();
-      show(0);
-      resetTimer();
-
-      // Bind next/prev (rebind each time safely)
-      if (els.btnNext) {
-        // remove previous listener by cloning to avoid duplicates
-        const n = els.btnNext.cloneNode(true);
-        els.btnNext.parentNode.replaceChild(n, els.btnNext);
-        n.addEventListener('click', () => { next(); resetTimer(); });
-      }
-      if (els.btnPrev) {
-        const p = els.btnPrev.cloneNode(true);
-        els.btnPrev.parentNode.replaceChild(p, els.btnPrev);
-        p.addEventListener('click', () => { prev(); resetTimer(); });
-      }
-
-      // pause on hover
-      const rotWrap = document.querySelector('.rotator-wrap');
-      rotWrap && rotWrap.addEventListener('mouseenter', () => clearInterval(R.rotTimer));
-      rotWrap && rotWrap.addEventListener('mouseleave', resetTimer);
-
-      // also reposition buttons on orientation change / resize for mobile
-      function handleResize() {
-        try {
-          const preloadImg = new Image();
-          preloadImg.src = rotImgs[R.rotIndex];
-          preloadImg.onload = function () {
-            const size = sizeFrameToImage(preloadImg);
-            positionButtonsInsideFrame(size);
-          };
-        } catch (e) {}
-      }
-      window.removeEventListener('resize', R._resizeHandler || (() => {}));
-      R._resizeHandler = debounce(handleResize, 140);
-      window.addEventListener('resize', R._resizeHandler);
-
-      R.inited = true;
-      R.initializedOnce = true;
-
-      // expose for debugging/testing
-      window.__SHALTZ_ROTATOR.instance = {
-        init,
-        show,
-        next,
-        prev,
-        resetTimer
-      };
-    }
-
-    // tiny debounce helper
-    function debounce(fn, ms) {
-      let t = null;
-      return function () {
-        clearTimeout(t);
-        t = setTimeout(() => fn.apply(this, arguments), ms);
-      };
-    }
-
-    // Initialize on DOM ready, and re-init on PJAX lifecycle events
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', init);
-    } else {
-      init();
-    }
-
-    // Re-init after PJAX loads/replaces content so the rotator is always bound
-    ['pjax:complete', 'pjax:loaded', 'pjax:end'].forEach(ev => {
-      document.addEventListener(ev, () => {
-        try { init(); } catch (e) { console.warn('rotator re-init failed', e); }
-      });
-    });
-
-    // Also ensure the rotator re-inits when popup closes (defensive)
-    document.addEventListener('sh:popup-close', () => {
-      try { init(); } catch (e) {}
-    });
-
-  })();
-  </script>
-
-  <!-- Overlay toggle script: shows/hides the page-dim overlay when posts open/close.
-       It hooks into clicks on .post-link and popup close/backdrop events.
-       This is intentionally small and resilient (listens for custom events too).
-  -->
-  <script>
-    (function () {
-      function q(sel, ctx) { return (ctx || document).querySelector(sel); }
-      function qAll(sel, ctx) { return Array.from((ctx || document).querySelectorAll(sel)); }
-
-      const overlay = document.getElementById('page-dim-overlay');
-
-      // show overlay
-      function showOverlay() {
-        if (!overlay) return;
-        overlay.classList.remove('hidden');
-        // give a small timeout to ensure transition runs after display change
-        requestAnimationFrame(() => overlay.classList.add('visible'));
-        overlay.setAttribute('aria-hidden', 'false');
-      }
-
-      // hide overlay
-      function hideOverlay() {
-        if (!overlay) return;
-        overlay.classList.remove('visible');
-        // wait for transition, then hide completely to remove from accessibility flow
-        const t = setTimeout(() => {
-          overlay.classList.add('hidden');
-          overlay.setAttribute('aria-hidden', 'true');
-          clearTimeout(t);
-        }, 240);
-      }
-
-      // Bind to post links (handles normal clicks; PJAX may also trigger popups)
-      function bindPostLinks() {
-        qAll('.post-link').forEach(a => {
-          // Avoid double-binding by marking
-          if (a.dataset.__dimBound) return;
-          a.dataset.__dimBound = '1';
-          a.addEventListener('click', () => {
-            // slight delay to allow any PJAX/post-popup actions to begin
-            // but show immediately for immediate UX feedback
-            showOverlay();
-          });
-        });
-      }
-
-      // Close overlay when popup-close is clicked or backdrop clicked
-      function bindPopupCloseers() {
-        const closeBtn = document.getElementById('shPopupClose');
-        if (closeBtn && !closeBtn.dataset.__dimBound) {
-          closeBtn.dataset.__dimBound = '1';
-          closeBtn.addEventListener('click', hideOverlay);
-        }
-
-        // backdrop inside popup (if your existing code closes the popup from this element)
-        const popupBackdrop = document.getElementById('shPopupBackdrop');
-        if (popupBackdrop && !popupBackdrop.dataset.__dimBound) {
-          popupBackdrop.dataset.__dimBound = '1';
-          popupBackdrop.addEventListener('click', hideOverlay);
-        }
-
-        // also hide when mini-close used (if applicable)
-        const miniClose = document.getElementById('miniClose');
-        if (miniClose && !miniClose.dataset.__dimBound) {
-          miniClose.dataset.__dimBound = '1';
-          miniClose.addEventListener('click', hideOverlay);
-        }
-      }
-
-      // Listen for custom events from your post-popup.js if it emits them
-      document.addEventListener('sh:popup-open', showOverlay);
-      document.addEventListener('sh:popup-close', hideOverlay);
-
-      // Re-bind on DOM ready and after PJAX events (so newly injected links are bound)
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-          bindPostLinks();
-          bindPopupCloseers();
-        });
-      } else {
-        bindPostLinks();
-        bindPopupCloseers();
-      }
-
-      ['pjax:complete', 'pjax:loaded', 'pjax:end'].forEach(ev => {
-        document.addEventListener(ev, () => {
-          try { bindPostLinks(); bindPopupCloseers(); } catch (e) {}
-        });
-      });
-
-      // If overlay itself is clicked, we hide popup (optional UX). This mirrors typical modal behavior.
-      overlay && overlay.addEventListener('click', () => {
-        // attempt to find and trigger the popup close button; if not found, just hide the overlay
-        const closeBtn = document.getElementById('shPopupClose');
-        if (closeBtn) closeBtn.click();
-        else hideOverlay();
-      });
-    })();
-  </script>
-
-  <!-- MOBILE-ONLY initializer (guarded) - minimal, non-destructive -->
-  <script>
-    (function () {
-      // Only run mobile enhancements when viewport is small.
-      if (!window.matchMedia) return;
-      const mq = window.matchMedia('(max-width: 768px)');
-
-      function mobileInit() {
-        // mark popup to use mobile-fullscreen styles (CSS above will apply)
-        const popup = document.getElementById('sh-post-popup');
-        if (popup) {
-          popup.classList.add('mobile-fullscreen');
-        }
-
-        // make summary elements keyboard accessible when used as toggles
-        Array.from(document.querySelectorAll('.mobile-recs summary')).forEach(s => {
-          if (!s.getAttribute('tabindex')) s.setAttribute('tabindex', '0');
-          // allow Enter/Space to toggle (native handles click on summary, but ensure keyboard behavior)
-          s.addEventListener('keydown', (ev) => {
-            if (ev.key === 'Enter' || ev.key === ' ') {
-              ev.preventDefault();
-              s.parentElement.open = !s.parentElement.open;
-            }
-          });
-        });
-
-        // wire a small handler for the mobile music button to open the mobile player panel
-        const mmPlay = document.getElementById('mm-play');
-        const mpPanel = document.getElementById('mobilePlayerPanel');
-        const mpClose = document.getElementById('mpClose');
-        const mpAudio = document.getElementById('mobileAudio');
-
-        // Utility to set mmPlay visual state
-        function setMMPlayingState(isPlaying) {
-          if (!mmPlay) return;
-          if (isPlaying) {
-            mmPlay.classList.add('playing');
-            mmPlay.setAttribute('aria-pressed', 'true');
-            mmPlay.textContent = '❚❚';
-            mmPlay.setAttribute('aria-label', 'Pause music');
-            mmPlay.title = 'Pause';
-          } else {
-            mmPlay.classList.remove('playing');
-            mmPlay.setAttribute('aria-pressed', 'false');
-            mmPlay.textContent = '▶';
-            mmPlay.setAttribute('aria-label', 'Open music player');
-            mmPlay.title = 'Music — tap to open';
-          }
-        }
-
-        // Ensure audio element events update the floating button
-        if (mpAudio && !mpAudio.dataset.__wiredEvents) {
-          mpAudio.dataset.__wiredEvents = '1';
-          mpAudio.addEventListener('play', () => { setMMPlayingState(true); });
-          mpAudio.addEventListener('pause', () => { setMMPlayingState(false); });
-          mpAudio.addEventListener('ended', () => { setMMPlayingState(false); });
-          // When controls are used (seek/play), ensure state reflects it
-          mpAudio.addEventListener('playing', () => { setMMPlayingState(true); });
-        }
-
-        if (mmPlay && !mmPlay.dataset.__wired) {
-          mmPlay.dataset.__wired = '1';
-          mmPlay.addEventListener('click', (ev) => {
-            ev.preventDefault();
-
-            // If there's no panel/audio, fallback to opening your spotify/user page
-            if (!mpPanel || !mpAudio) {
-              // open external as fallback
-              window.open('https://open.spotify.com/user/shalvin.rautela', '_blank', 'noopener');
-              return;
-            }
-
-            // If audio is playing, toggle pause
-            const audioIsPlaying = mpAudio && !mpAudio.paused && !mpAudio.ended && mpAudio.currentTime > 0;
-            if (audioIsPlaying) {
-              try { mpAudio.pause(); } catch (e) {}
-              // leave panel open so user can press play again
-              mpPanel.classList.add('open');
-              mpPanel.setAttribute('aria-hidden', 'false');
-              return;
-            }
-
-            // If panel closed, open and try to play
-            const isOpen = mpPanel.classList.contains('open');
-            if (!isOpen) {
-              mpPanel.classList.add('open');
-              mpPanel.setAttribute('aria-hidden', 'false');
-              try {
-                if (mpAudio && mpAudio.load) mpAudio.load();
-                if (mpAudio && typeof mpAudio.play === 'function') {
-                  mpAudio.play().catch(()=> {
-                    // autoplay policy may block — user can still press native play
-                    setMMPlayingState(false);
-                  });
-                }
-              } catch (e) {
-                console.warn('mpAudio play failed', e);
-              }
-              return;
-            }
-
-            // If panel open and audio paused, attempt to play
-            if (isOpen && (mpAudio.paused || mpAudio.ended)) {
-              try { mpAudio.play().catch(()=> setMMPlayingState(false)); } catch (e) {}
-              return;
-            }
-
-            // fallback: toggle panel visibility
-            if (isOpen) {
-              mpPanel.classList.remove('open');
-              mpPanel.setAttribute('aria-hidden', 'true');
-              try { if (mpAudio && typeof mpAudio.pause === 'function') mpAudio.pause(); } catch (e) {}
-            } else {
-              mpPanel.classList.add('open');
-              mpPanel.setAttribute('aria-hidden', 'false');
-            }
-          });
-        }
-
-        if (mpClose && !mpClose.dataset.__wired) {
-          mpClose.dataset.__wired = '1';
-          mpClose.addEventListener('click', (ev) => {
-            ev.preventDefault();
-            if (mpPanel) {
-              mpPanel.classList.remove('open');
-              mpPanel.setAttribute('aria-hidden', 'true');
-            }
-            try { if (mpAudio && typeof mpAudio.pause === 'function') mpAudio.pause(); } catch (e) {}
-          });
-        }
-
-        // Also bind play/pause click on the audio element itself to sync mm-play promptly
-        if (mpAudio && !mpAudio.dataset.__wiredClick) {
-          mpAudio.dataset.__wiredClick = '1';
-          mpAudio.addEventListener('click', () => {
-            // Short timeout to let the playing/paused event fire; update UI conservatively
-            setTimeout(() => {
-              const playing = !mpAudio.paused && !mpAudio.ended && mpAudio.currentTime > 0;
-              setMMPlayingState(playing);
-            }, 80);
-          });
-        }
-
-        // also close the mobile panel if orientation changes to desktop-sized to avoid leftover UI
-        const closeIfDesktop = () => {
-          if (!mq.matches && mpPanel && mpPanel.classList.contains('open')) {
-            mpPanel.classList.remove('open');
-            mpPanel.setAttribute('aria-hidden', 'true');
-            try { if (mpAudio && typeof mpAudio.pause === 'function') mpAudio.pause(); } catch (e) {}
-          }
-        };
-        window.addEventListener('resize', debounce(closeIfDesktop, 140));
-
-        // If the page loads while audio is playing (rare), ensure button reflects it.
-        try {
-          if (mpAudio) {
-            const playing = !mpAudio.paused && !mpAudio.ended && mpAudio.currentTime > 0;
-            setMMPlayingState(playing);
-          }
-        } catch (e) {}
-      }
-
-      function handleMQ(e) {
-        if (e.matches) mobileInit();
-        else {
-          // if switching to desktop, remove mobile markers to avoid interfering
-          const popup = document.getElementById('sh-post-popup');
-          if (popup) popup.classList.remove('mobile-fullscreen');
-
-          // also ensure any mobile player gets closed
-          const mpPanel = document.getElementById('mobilePlayerPanel');
-          const mpAudio = document.getElementById('mobileAudio');
-          if (mpPanel && mpPanel.classList.contains('open')) {
-            mpPanel.classList.remove('open');
-            mpPanel.setAttribute('aria-hidden', 'true');
-          }
-          try { if (mpAudio && typeof mpAudio.pause === 'function') mpAudio.pause(); } catch (e) {}
-        }
-      }
-
-      // initialize on load if mobile, and listen for changes
-      if (mq.matches) mobileInit();
-      mq.addListener(handleMQ);
-
-      // small debounce helper inside this scope
-      function debounce(fn, ms) {
-        let t = null;
-        return function () {
-          clearTimeout(t);
-          t = setTimeout(() => fn.apply(this, arguments), ms);
-        };
-      }
-    })();
-  </script>
-
-  <!-- Sync helper: ensure mm-play reflects central player state if that player exists.
-       This is a safety layer so the floating button shows pause/play correctly even when central player.js controls playback.
-  -->
-  <script>
-    (function () {
-      function syncWithCentralPlayer() {
-        const mm = document.getElementById('mm-play');
-        if (!mm) return;
-        // If the global Shaltz player exists, hook its audio events
-        if (window.__SHALTZ_PLAYER && window.__SHALTZ_PLAYER.audio) {
-          const audio = window.__SHALTZ_PLAYER.audio;
-          // avoid double-binding
-          if (audio._mmSynced) return;
-          audio._mmSynced = true;
-          audio.addEventListener('play', () => {
-            mm.classList.add('playing');
-            mm.setAttribute('aria-pressed', 'true');
-            mm.textContent = '❚❚';
-          });
-          audio.addEventListener('pause', () => {
-            mm.classList.remove('playing');
-            mm.setAttribute('aria-pressed', 'false');
-            mm.textContent = '▶';
-          });
-          audio.addEventListener('ended', () => {
-            mm.classList.remove('playing');
-            mm.setAttribute('aria-pressed', 'false');
-            mm.textContent = '▶';
-          });
-        }
-      }
-
-      document.addEventListener('sh:player-ready', syncWithCentralPlayer);
-      // attempt to run now if player already exists
-      setTimeout(syncWithCentralPlayer, 400);
-    })();
-  </script>
+<header class="old-header">
+<div class="header-brand">
+<img src="/favicon-32x32.png" class="site-logo">
+<div>
+<h1 class="old-site-title">
+Fuck it,
+<a href="https://twitter.com/YouShallWin" class="title-embedded-link" target="_blank">Shaltz</a>
+mode
+</h1>
+</div>
+</div>
+<div class="old-sep"></div>
+<div class="old-marquee">Life is short, go long to hedge</div>
+</header>
+
+<main id="main-content">
+
+<section class="hub">
+
+<div class="side-cards">
+
+<div class="side-card">
+<a class="title-link">Music I like</a>
+<ul class="item-list">
+<li><a href="https://open.spotify.com/album/3b4E89rxzZQ9zkhgKpj8N4">Animals — Pink Floyd</a></li>
+<li><a href="https://open.spotify.com/album/77CZUF57sYqgtznUe3OikQ">I love my computer - Ninajirachi</a></li>
+<li><a href="https://open.spotify.com/album/4Uv86qWpGTxf7fU7lG5X6F">The college dropout - Ye</a></li>
+<li><a href="https://open.spotify.com/album/6QaVfG1pHYl1z15ZxkvVDW">Sgt. Pepper's lonely hearts club band</a></li>
+</ul>
+</div>
+
+<div class="side-card">
+<a class="title-link">Books I like</a>
+<ul class="item-list">
+<li><a href="#"></a></li>
+<li><a href="#"></a></li>
+<li><a href="#"></a></li>
+<li><a href="#"></a></li>
+</ul>
+</div>
+
+</div>
+
+<div class="center-posts">
+
+<h2>Tried thinking, this is what I came up with:</h2>
+
+<ul>
+
+<li>
+<a href="posts/trade-framework.html"
+class="post-link neon-link"
+data-title="The Future Is a Trade">
+The trade framework
+</a>
+</li>
+
+<li>
+<a href="posts/doom-part1.html"
+class="post-link neon-link"
+data-title="Doom — Part 1">
+Doom Part 1
+</a>
+</li>
+
+</ul>
+
+</div>
+
+<div class="side-cards">
+
+<div class="side-card">
+<a class="title-link">Articles I like</a>
+<ul class="item-list">
+<li><a href="https://oldcoinbad.com/p/long-degeneracy">Long Degeneracy — Jez</a></li>
+<li><a href="https://0xltr.substack.com/p/what-could-go-right">What could go right? - LTR</a></li>
+<li><a href="https://vitalik.eth.limo/general/2024/04/01/dc.html">Degen communism - Vitalik</a></li>
+</ul>
+</div>
+
+<div class="side-card">
+<a class="title-link">Movies I like</a>
+<ul class="item-list">
+<li><a href="https://letterboxd.com/film/wild-strawberries/">Wild strawberries</a></li>
+<li><a href="https://letterboxd.com/film/fight-club/">Fight club</a></li>
+<li><a href="https://letterboxd.com/film/persona/">Persona</a></li>
+</ul>
+</div>
+
+</div>
+
+</section>
+
+</main>
+
+<div id="page-dim-overlay" class="hidden"></div>
+
+<footer class="sh-terminal">
+<div class="line">user@shaltz:~$ echo "i love you anon, never kys"</div>
+<div class="line">
+links:
+[ <a class="neon-link post-link" href="posts/trade-framework.html">trade-framework</a> ]
+[ <a class="neon-link post-link" href="posts/doom-part1.html">doom-part1</a> ]
+</div>
+</footer>
+
+<script src="js/player.js" defer></script>
+<script src="js/post-popup.js" defer></script>
+<script src="js/pjax.js" defer></script>
 
 </body>
 </html>

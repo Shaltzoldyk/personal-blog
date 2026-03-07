@@ -1,1218 +1,389 @@
 /* ============================================================
-   SHALTZ MODE — TOXIC LIME EDITION (Option A — #b6ff00)
-   Full stylesheet: theme variables, overlay, hub layout (side cards + rotator),
-   mini-grid, popup, rotator, and responsive rules.
-   Updated (mobile-only): rotator alignment fixes so image naturally aligns with the screen,
-   keep desktop untouched.
+   SHALTZ MODE — TOXIC LIME EDITION
+   Updated: center posts without black box
    ============================================================ */
 
-/* Toxic Lime + Red theme variables */
 :root {
   --bright-red: #ff0000;
-  --bright-border: #b6ff00;  /* toxic lime */
-  --bright-yellow: #b6ff00;  /* same lime for consistency */
+  --bright-border: #b6ff00;
+  --bright-yellow: #b6ff00;
   --lime-bg: #b6ff00;
 
-  /* neon for accents */
   --neon-1: #7cf7ff;
   --neon-2: #ff5ef7;
   --accent: #39ff14;
 
   --text-dark: #0b0b0b;
 
-  /* popup specific */
   --popup-bg-1: #060606;
   --popup-bg-2: #0b0b0b;
   --popup-border: rgba(20,211,154,0.14);
   --popup-accent: #14d39a;
   --popup-outer-frame: #ffffff;
 
-  /* overlay */
   --overlay-color: rgba(0,0,0,0.35);
 }
 
-/* Reset baseline */
-* { box-sizing: border-box; }
-html, body { height: 100%; margin: 0; padding: 0; }
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;padding:0}
 
-/* Utility classes */
-.hidden { display: none !important; }
+.hidden{display:none!important}
 
 /* ============================================================
    PAGE DIM OVERLAY
    ============================================================ */
-#page-dim-overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--overlay-color);
-  z-index: 9990;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 220ms ease;
-  will-change: opacity;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-user-select: none;
-  user-select: none;
+
+#page-dim-overlay{
+position:fixed;
+inset:0;
+background:var(--overlay-color);
+z-index:9990;
+pointer-events:none;
+opacity:0;
+transition:opacity 220ms ease;
 }
 
-#page-dim-overlay.visible {
-  pointer-events: auto;
-  opacity: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #page-dim-overlay { transition: none; }
+#page-dim-overlay.visible{
+pointer-events:auto;
+opacity:1;
 }
 
 /* ============================================================
-   FULL PAGE LIME BACKGROUND
+   PAGE BACKGROUND
    ============================================================ */
-body {
-  background: var(--lime-bg);
-  color: var(--text-dark);
-  font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, "Courier New", monospace;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+
+body{
+background:var(--lime-bg);
+color:var(--text-dark);
+font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,"Courier New",monospace;
 }
 
 /* ============================================================
-   RED HEADER (full-width)
+   HEADER
    ============================================================ */
-.old-header {
-  width: 100%;
-  background: var(--bright-red);
-  border-bottom: 4px solid var(--bright-border);
-  box-shadow: 0 4px 18px rgba(0,0,0,0.35);
-  text-align: center;
-  padding: 16px 0 10px;
-  position: relative;
-  z-index: 20;
+
+.old-header{
+width:100%;
+background:var(--bright-red);
+border-bottom:4px solid var(--bright-border);
+box-shadow:0 4px 18px rgba(0,0,0,0.35);
+text-align:center;
+padding:16px 0 10px;
+z-index:20;
 }
 
-.old-header ._inner {
-  max-width: 1200px;
-  margin: 0 auto;
+.old-site-title{
+margin:0;
+font-family:"Courier New",monospace;
+font-size:48px;
+color:var(--bright-border);
+text-shadow:2px 2px rgba(0,0,0,0.75);
 }
 
-.old-site-title {
-  margin: 0;
-  font-family: "Courier New", monospace;
-  font-size: 48px;
-  color: var(--bright-border);
-  text-shadow: 2px 2px rgba(0,0,0,0.75);
+.old-sep{
+height:4px;
+background:var(--bright-border);
+width:95%;
+margin:8px auto;
 }
 
-.old-sep {
-  height: 4px;
-  background: var(--bright-border);
-  width: 95%;
-  margin: 8px auto;
-  box-shadow: inset 0 2px rgba(0,0,0,0.18);
+.old-marquee{
+font-family:"Courier New",monospace;
+font-size:13px;
+color:var(--bright-border);
 }
 
-.old-marquee {
-  font-family: "Courier New", monospace;
-  font-size: 13px;
-  color: var(--bright-border);
+.site-logo{
+width:48px;
+height:48px;
+object-fit:contain;
+margin-right:10px;
+border-radius:6px;
+border:2px solid rgba(255,255,255,0.06);
 }
 
-/* small logo tweak (used in header if present) */
-.site-logo {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-  vertical-align: middle;
-  margin-right: 10px;
-  border-radius: 6px;
-  border: 2px solid rgba(255,255,255,0.06);
-}
-
-/* ensure the header title and logo align nicely */
-.header-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Header Twitter handle styles */
-.header-brand > div {
-  display: inline-block;
-  vertical-align: middle;
-}
-
-.header-twitter {
-  display: inline-block;
-  margin-top: 6px;
-  font-family: "Courier New", monospace;
-  font-size: 13px;
-  color: var(--bright-border);
-  opacity: 0.86;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: rgba(0,0,0,0.02);
-  transition: opacity 180ms ease, transform 160ms ease, box-shadow 160ms ease;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.header-twitter:hover,
-.header-twitter:focus {
-  opacity: 1;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.45), 0 0 18px rgba(182,255,0,0.04);
-  outline: none;
-}
-
-@media (max-width: 540px) {
-  .header-twitter { font-size: 12px; margin-top: 4px; padding: 1px 5px; }
+.header-brand{
+display:inline-flex;
+align-items:center;
+gap:8px;
 }
 
 /* ============================================================
-   MAIN CONTENT (centered, padding preserved)
+   MAIN CONTENT
    ============================================================ */
-main#main-content {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 24px 16px;
+
+main#main-content{
+max-width:1100px;
+margin:0 auto;
+padding:24px 16px;
 }
 
 /* ============================================================
-   ROTATOR — full image visible (contain) + yellow border
+   HUB LAYOUT
    ============================================================ */
-.rotator-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  margin: 20px 0;
-}
 
-/* added: ensure inner row centers content by default */
-.rotator-inner {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  justify-content: center; /* ensure controls/dots center when possible */
-  /* make rotator-inner the positioning context for overlayed prev/next on mobile */
-  position: relative;
-}
-
-/* Frame defaults (desktop-friendly) */
-.rotator-frame {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #fff4;
-  border: 4px solid var(--bright-border);
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
-  transition: width 260ms ease, height 260ms ease;
-}
-
-/* Default image behaviour (desktop) */
-.rotator-frame img#rotator {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
-  opacity: 0;
-  transform: scale(0.99);
-  transition: opacity 350ms ease, transform 250ms ease;
-}
-
-.rotator-frame img#rotator.visible {
-  opacity: 1;
-  transform: scale(1);
-}
-
-/* Prev/Next (desktop defaults) */
-.rot-btn {
-  background: rgba(0,0,0,0.7);
-  border: 1px dashed var(--bright-border);
-  color: var(--bright-border);
-  padding: 8px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: monospace;
-  font-size: 16px;
-}
-
-/* Dots */
-.rot-dots {
-  display: flex;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.rot-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: rgba(0,0,0,0.1);
-  border: 1px solid rgba(0,0,0,0.25);
-  cursor: pointer;
-}
-
-.rot-dot.active {
-  background: var(--bright-border);
-  box-shadow: 0 0 12px var(--bright-border);
-  transform: scale(1.15);
+.hub{
+max-width:1100px;
+margin:18px auto;
+padding:0 16px;
+display:grid;
+grid-template-columns:260px 1fr 260px;
+gap:18px;
+align-items:start;
 }
 
 /* ============================================================
-   HUB LAYOUT: side cards + centered rotator
+   SIDE CARDS
    ============================================================ */
-.hub {
-  max-width: 1100px;
-  margin: 18px auto;
-  padding: 0 16px;
-  display: grid;
-  grid-template-columns: 260px 1fr 260px;
-  gap: 18px;
-  align-items: start;
+
+.side-cards{
+display:flex;
+flex-direction:column;
+gap:16px;
 }
 
-/* left / right stacked cards container */
-.side-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  align-items: stretch;
+.side-card{
+background:linear-gradient(180deg,#0a0a0a,#080808);
+border-radius:8px;
+border:4px solid var(--popup-outer-frame);
+padding:10px;
+box-shadow:0 10px 30px rgba(0,0,0,0.45);
+display:flex;
+flex-direction:column;
+gap:8px;
+align-items:center;
+color:#dfe;
+height:320px;
+overflow:hidden;
 }
 
-/* generic side-card used in hub */
-.side-card {
-  background: linear-gradient(180deg, #0a0a0a, #080808);
-  border-radius: 8px;
-  border: 4px solid var(--popup-outer-frame);
-  padding: 10px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: center;
-  color: #dfe;
-  transition: transform 160ms ease, box-shadow 160ms ease;
-  position: relative;
-
-  height: 320px;
-  min-height: 320px;
-  max-height: 320px;
-  overflow: hidden;
+.side-card:hover{
+transform:translateY(-6px);
+box-shadow:0 18px 48px rgba(0,0,0,0.6);
 }
 
-.side-card:focus-within,
-.side-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 18px 48px rgba(0,0,0,0.6), 0 0 28px rgba(182,255,0,0.06);
-  outline: none;
+.side-card .title-link{
+font-family:"Courier New",monospace;
+font-weight:700;
+color:#b6ff00;
+text-decoration:underline;
 }
 
-.side-card .cover {
-  width: 100%;
-  height: 120px;
-  border-radius: 6px;
-  overflow: hidden;
-  background: linear-gradient(180deg,#111,#000);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid rgba(182,255,0,0.14);
-  flex: 0 0 auto;
+.side-card .item-list{
+width:100%;
+list-style:none;
+padding:6px;
+display:flex;
+flex-direction:column;
+gap:8px;
+overflow:auto;
 }
 
-.side-card .cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+.side-card .item-list li a{
+color:white;
+text-decoration:none;
+font-family:"Courier New",monospace;
+font-size:14px;
 }
 
-.side-card .title-link {
-  display: inline-block;
-  margin: 0;
-  margin-top: 6px;
-  font-family: "Courier New", monospace;
-  font-weight: 700;
-  color: #b6ff00;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  padding: 6px 8px;
-  border-radius: 6px;
-  background: rgba(0,0,0,0.02);
-}
-
-.side-card .title-link:hover,
-.side-card .title-link:focus {
-  background: rgba(182,255,0,0.03);
-  outline: none;
-  box-shadow: 0 0 18px rgba(182,255,0,0.04);
-}
-
-.side-card .sub {
-  font-size: 12px;
-  color: rgba(255,255,255,0.8);
-  font-family: Arial, sans-serif;
-  text-align: center;
-  margin: 2px 0 4px 0;
-  flex: 0 0 auto;
-}
-
-.side-card .item-list {
-  width: 100%;
-  margin: 0;
-  padding: 6px 8px;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: start;
-
-  flex: 1 1 auto;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.side-card .item-list li a {
-  color: rgba(255,255,255,0.9);
-  text-decoration: none;
-  font-family: "Courier New", monospace;
-  font-size: 14px;
-  padding: 4px 6px;
-  border-radius: 4px;
-  display: inline-block;
-}
-
-.side-card .item-list li a:hover,
-.side-card .item-list li a:focus {
-  color: #fff;
-  background: rgba(182,255,0,0.04);
-  outline: none;
-}
-
-.side-card .item-list::-webkit-scrollbar {
-  width: 10px;
-}
-
-.side-card .item-list::-webkit-scrollbar-track {
-  background: rgba(0,0,0,0.04);
-  border-radius: 8px;
-}
-
-.side-card .item-list::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0.2);
-  border-radius: 8px;
-}
-
-.side-card .item-list {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0,0,0,0.2) rgba(0,0,0,0.04);
-}
-
-.hub-rotator {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: center;
-  justify-content: flex-start;
-}
-
-.hub .rotator-frame {
-  max-width: 100%;
-  border: 4px solid var(--bright-border);
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
-  transition: width 260ms ease, height 260ms ease;
-  background: #fff4;
+.side-card .item-list li a:hover{
+color:#b6ff00;
 }
 
 /* ============================================================
-   MINI GRID — horizontal scrollable cards (fallback / mobile)
+   CENTER POSTS
    ============================================================ */
-.mini-grid-wrap {
-  max-width: 1100px;
-  margin: 10px auto 28px;
-  padding: 6px 14px;
+
+.center-posts{
+text-align:center;
+padding:60px 0;
+min-height:200px;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+
+background:transparent !important;
+border:none !important;
+box-shadow:none !important;
 }
 
-.mini-grid-title {
-  font-family: "Courier New", monospace;
-  text-align: center;
-  margin: 6px 0 14px;
-  color: #000;
+.center-posts h2{
+color:#000;
+font-family:"Courier New",monospace;
+font-size:32px;
+margin-bottom:28px;
+font-weight:700;
+
+text-shadow:
+1px 1px 0 rgba(0,0,0,0.35),
+0 0 4px rgba(0,0,0,0.15);
 }
 
-.mini-grid {
-  display: flex;
-  gap: 18px;
-  overflow-x: auto;
-  padding: 12px 6px;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  align-items: center;
-  justify-content: center;
+.center-posts ul{
+list-style:none;
+padding:0;
+margin:0;
+display:flex;
+flex-direction:column;
+gap:18px;
 }
 
-.mini-grid::-webkit-scrollbar { height: 10px; }
-.mini-grid::-webkit-scrollbar-track { background: rgba(0,0,0,0.03); border-radius: 8px; }
-.mini-grid::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 8px; }
-
-.mini-card {
-  flex: 0 0 220px;
-  scroll-snap-align: center;
-  background: linear-gradient(180deg, #0a0a0a, #080808);
-  border-radius: 8px;
-  border: 4px solid var(--popup-outer-frame);
-  padding: 10px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
-  display: inline-flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: center;
-  text-decoration: none;
-  color: #dfe;
-  transition: transform 160ms ease, box-shadow 160ms ease;
-  position: relative;
-}
-
-.mini-card:focus,
-.mini-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 18px 48px rgba(0,0,0,0.6), 0 0 28px rgba(182,255,0,0.06);
-  outline: none;
-}
-
-.mini-card .cover {
-  width: 180px;
-  height: 180px;
-  border-radius: 6px;
-  overflow: hidden;
-  background: linear-gradient(180deg, #111, #000);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid rgba(182,255,0,0.14);
-}
-
-.mini-card .cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.mini-card .label {
-  font-family: "Courier New", monospace;
-  font-weight: 700;
-  color: var(--bright-border, #b6ff00);
-  text-align: center;
-  font-size: 1rem;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-
-.mini-card .sub {
-  font-size: 12px;
-  color: rgba(255,255,255,0.7);
-  font-family: Arial, sans-serif;
-}
-
-.mini-card .ext-hint {
-  position: absolute;
-  right: 8px;
-  top: 8px;
-  font-size: 12px;
-  color: rgba(255,255,255,0.65);
-  background: rgba(0,0,0,0.2);
-  padding: 3px 6px;
-  border-radius: 4px;
-  border: 1px solid rgba(182,255,0,0.06);
-}
-
-/* ============================================================
-   POST LIST
-   ============================================================ */
-.post-list.centered {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  margin-top: 12px;
-}
-
-.post-list.centered ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.post-heading {
-  font-family: "Courier New", monospace;
-  color: #000;
-}
-
-.neon-link {
-  color: #000;
-  font-weight: 700;
-  font-size: 1.05rem;
-  text-shadow: 0 0 4px var(--bright-border), 0 0 12px var(--bright-border);
-}
-
-.neon-link:hover {
-  color: #fff;
-  text-shadow: 0 0 14px var(--bright-border), 0 0 25px var(--bright-border);
+.center-posts a{
+font-family:"Courier New",monospace;
+font-size:26px;
+color:#000 !important;
+font-weight:800;
+text-decoration:none;
+text-shadow:none !important;
 }
 
 /* ============================================================
    TERMINAL FOOTER
    ============================================================ */
-.sh-terminal {
-  max-width: 1100px;
-  margin: 30px auto;
-  background: #000;
-  padding: 12px;
-  border-radius: 6px;
-  border: 2px solid var(--bright-border);
-  color: var(--bright-border);
-  font-family: "Courier New", monospace;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.4);
-}
 
-.sh-terminal .muted {
-  color: rgba(255,255,255,0.5);
+.sh-terminal{
+max-width:1100px;
+margin:30px auto;
+background:#000;
+padding:12px;
+border-radius:6px;
+border:2px solid var(--bright-border);
+color:var(--bright-border);
+font-family:"Courier New",monospace;
+box-shadow:0 12px 30px rgba(0,0,0,0.4);
 }
 
 /* ============================================================
-   MINI-OPENER WINDOW
+   AUDIO PLAYER
    ============================================================ */
-.mini-opener {
-  position: fixed;
-  z-index: 9999;
-  width: min(86vw, 520px);
-  max-width: 520px;
-  background: #000;
-  border: 3px solid var(--bright-border);
-  box-shadow: 0 10px 28px rgba(0,0,0,0.6);
-  border-radius: 6px;
-  transform-origin: center;
-  transition: opacity 180ms ease, transform 180ms ease;
-  opacity: 1;
+
+#shaltz-audio-player{
+position:fixed;
+right:18px;
+bottom:18px;
+background:#000;
+border:2px solid var(--bright-border);
+color:var(--bright-border);
+padding:8px;
+width:260px;
+border-radius:6px;
+z-index:9999;
 }
 
-.mini-opener.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.mini-bar {
-  background: rgba(255,255,255,0.05);
-  padding: 6px;
-  cursor: grab;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.mini-close {
-  background: transparent;
-  border: none;
-  color: var(--bright-border);
-  font-size: 20px;
-  cursor: pointer;
-}
-
-.mini-content {
-  padding: 10px;
-  display: flex;
-  justify-content: center;
-}
-
-.mini-content img {
-  max-width: 100%;
-  max-height: 70vh;
-  border-radius: 4px;
+#shaltz-audio-player .sh-btn{
+background:transparent;
+border:1px solid var(--bright-border);
+color:var(--bright-border);
+padding:4px 6px;
+cursor:pointer;
 }
 
 /* ============================================================
-   AUDIO PLAYER (desktop)
+   CRT OVERLAY
    ============================================================ */
-#shaltz-audio-player {
-  position: fixed;
-  right: 18px;
-  bottom: 18px;
-  background: #000;
-  border: 2px solid var(--bright-border);
-  color: var(--bright-border);
-  padding: 8px;
-  width: 260px;
-  border-radius: 6px;
-  z-index: 9999;
+
+.crt-overlay{
+pointer-events:none;
+position:fixed;
+inset:0;
+background-image:linear-gradient(rgba(0,0,0,0.05) 1px,transparent 1px);
+background-size:100% 3px;
+opacity:0.15;
+z-index:999;
 }
 
-#shaltz-audio-player .sh-btn {
-  background: transparent;
-  border: 1px solid var(--bright-border);
-  color: var(--bright-border);
-  padding: 4px 6px;
-  cursor: pointer;
+body::after{
+content:'';
+position:fixed;
+inset:0;
+pointer-events:none;
+background-image:
+radial-gradient(circle at 20% 10%, rgba(0,0,0,0.06), transparent 10%),
+radial-gradient(circle at 80% 80%, rgba(0,0,0,0.05), transparent 10%);
+opacity:0.12;
+z-index:998;
 }
 
 /* ============================================================
-   Floating Twitter / X icon
+   POPUP SYSTEM
    ============================================================ */
-.floating-twitter {
-  position: fixed;
-  right: 22px;
-  bottom: 22px;
-  width: 44px;
-  height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  text-decoration: none;
-  z-index: 9995;
-  cursor: pointer;
-  opacity: 0.48;
-  transition: opacity 180ms ease, transform 160ms ease, box-shadow 160ms ease;
-  color: rgba(255,255,255,0.92);
-  background: rgba(0,0,0,0.18);
-  border: 1px solid rgba(255,255,255,0.03);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  padding: 6px;
-  -webkit-tap-highlight-color: transparent;
+
+#sh-post-popup{
+position:fixed;
+inset:18px;
+display:flex;
+align-items:center;
+justify-content:center;
+z-index:100000;
+pointer-events:none;
 }
 
-.floating-twitter:hover,
-.floating-twitter:focus {
-  opacity: 1;
-  transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 18px rgba(182,255,0,0.03);
-  outline: none;
+#sh-post-popup.hidden{
+display:none;
 }
 
-.floating-twitter svg { display: block; width: 22px; height: 22px; }
-
-@media (max-width: 420px) {
-  .floating-twitter { right: 12px; bottom: 12px; width: 36px; height: 36px; padding: 4px; opacity: 0.42; }
+.sh-popup-outer-frame{
+border:6px solid var(--popup-outer-frame);
+border-radius:8px;
+padding:6px;
+box-shadow:0 14px 40px rgba(0,0,0,0.65);
+max-width:calc(100% - 48px);
+max-height:calc(100% - 48px);
+pointer-events:auto;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .floating-twitter { transition: none; transform: none; }
+.sh-popup-window{
+max-width:860px;
+max-height:88vh;
+overflow:auto;
+background:linear-gradient(180deg,var(--popup-bg-1),var(--popup-bg-2));
+border-radius:6px;
+padding:28px;
+border:2px solid var(--popup-border);
+color:#ddd;
+}
+
+.sh-popup-body{
+color:#f3f3f3;
+line-height:1.65;
+font-size:16px;
 }
 
 /* ============================================================
-   CRT OVERLAY + NOISE
+   RESPONSIVE
    ============================================================ */
-.crt-overlay {
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px);
-  background-size: 100% 3px;
-  opacity: 0.15;
-  z-index: 999;
+
+@media (max-width:860px){
+
+.hub{
+grid-template-columns:1fr;
 }
 
-body::after {
-  content:'';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    radial-gradient(circle at 20% 10%, rgba(0,0,0,0.06), transparent 10%),
-    radial-gradient(circle at 80% 80%, rgba(0,0,0,0.05), transparent 10%);
-  opacity: 0.12;
-  z-index: 998;
+.side-cards{
+flex-direction:row;
+overflow-x:auto;
 }
 
-/* ============================================================
-   POPUP / OVERLAY STYLES
-   ============================================================ */
-#sh-post-popup {
-  position: fixed;
-  inset: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100000;
-  pointer-events: none;
+.side-card{
+min-width:180px;
+height:auto;
 }
 
-#sh-post-popup.hidden {
-  display: none;
-  pointer-events: none;
+.center-posts{
+padding:40px 0;
 }
-
-.sh-popup-outer-frame {
-  position: relative;
-  border: 6px solid var(--popup-outer-frame);
-  border-radius: 8px;
-  padding: 6px;
-  box-shadow: 0 14px 40px rgba(0,0,0,0.65);
-  background: transparent;
-  max-width: calc(100% - 48px);
-  max-height: calc(100% - 48px);
-  pointer-events: auto;
-}
-
-.sh-popup-window {
-  width: 100%;
-  max-width: 860px;
-  max-height: 88vh;
-  overflow: auto;
-  background: linear-gradient(180deg, var(--popup-bg-1), var(--popup-bg-2));
-  border-radius: 6px;
-  padding: 28px;
-  box-shadow: inset 0 2px rgba(0,0,0,0.6);
-  border: 2px solid var(--popup-border);
-  color: #ddd;
-  pointer-events: auto;
-  position: relative;
-}
-
-.sh-popup-topbar {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 6px;
-}
-
-.sh-popup-close {
-  background: transparent;
-  border: none;
-  color: var(--popup-accent);
-  font-size: 20px;
-  padding: 4px 8px;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: transform 120ms ease, background 120ms ease;
-}
-
-.sh-popup-close:hover,
-.sh-popup-close:focus {
-  transform: scale(1.05);
-  background: rgba(20,211,154,0.06);
-  outline: none;
-}
-
-.sh-popup-body {
-  color: #f3f3f3;
-  line-height: 1.65;
-  font-size: 16px;
-  overflow: auto;
-  padding-right: 8px;
-}
-
-.sh-popup-loading {
-  color: rgba(255,255,255,0.85);
-  font-family: "Courier New", monospace;
-  padding: 12px 6px;
-  text-align: center;
-}
-
-.sh-popup-window::after {
-  content: "";
-  position: absolute;
-  inset: 4px;
-  border-radius: 6px;
-  pointer-events: none;
-  box-shadow: 0 0 38px rgba(20,211,154,0.06);
-}
-
-.sh-popup-body::-webkit-scrollbar {
-  width: 12px;
-}
-
-.sh-popup-body::-webkit-scrollbar-track {
-  background: rgba(0,0,0,0.08);
-  border-radius: 8px;
-}
-
-.sh-popup-body::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(20,211,154,0.28), rgba(20,211,154,0.18));
-  border-radius: 8px;
-  border: 2px solid rgba(0,0,0,0.08);
-}
-
-.sh-popup-body {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(20,211,154,0.28) rgba(0,0,0,0.08);
-}
-
-.sh-popup-window a,
-.sh-popup-window button {
-  color: var(--popup-accent);
-}
-
-/* ============================================================
-   RESPONSIVE ADJUSTMENTS
-   ============================================================ */
-@media (max-width: 1100px) {
-  .hub { grid-template-columns: 220px 1fr 220px; gap: 12px; padding: 0 12px; }
-  .side-card { padding: 10px; }
-}
-
-@media (max-width: 880px) {
-  .mini-card { flex: 0 0 180px; }
-  .mini-card .cover { width: 140px; height: 140px; }
-}
-
-@media (max-width: 860px) {
-  .hub {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto;
-  }
-  .side-cards {
-    flex-direction: row;
-    gap: 12px;
-    overflow-x: auto;
-    padding: 8px 0;
-  }
-  .side-card { min-width: 180px; flex: 0 0 180px; height: auto; max-height: none; }
-  .hub-rotator { order: -1; margin-bottom: 8px; }
-}
-
-@media (max-width: 720px) {
-  .old-site-title { font-size: 32px; }
-  .rotator-frame { width: 92vw !important; }
-  .rotator-frame img#rotator { height: 46vw; width: auto; }
-  main#main-content { padding: 16px; }
-
-  #sh-post-popup { inset: 8px; }
-  .sh-popup-outer-frame { max-width: 100%; max-height: calc(100% - 16px); }
-  .sh-popup-window { max-height: calc(100vh - 32px); padding: 14px; }
-}
-
-@media (max-width: 540px) {
-  .mini-grid { gap: 12px; padding: 10px; }
-  .mini-card { flex: 0 0 150px; padding: 8px; }
-  .mini-card .cover { width: 120px; height: 120px; }
-  .side-card { min-width: 150px; flex: 0 0 150px; height: auto; max-height: none; }
-}
-
-/* ============================================================
-   MOBILE-ONLY ENHANCEMENTS (ADDED BY MERGE)
-   - Option B: Side-cards removed on mobile (only accordion visible)
-   - Tight mobile alignment fixes
-   ============================================================ */
-.mobile-only { display: none !important; }
-
-/* === Desktop behavior remains unchanged. Mobile overrides below === */
-@media (max-width: 768px) {
-
-  /* Make sure mobile-only elements are visible only here */
-  .mobile-only { display: block !important; }
-
-  /* Stack the hub into a single column without touching desktop rules */
-  .hub { grid-template-columns: 1fr !important; padding: 0 12px; gap:12px; }
-
-  /* We intentionally hide the specific side-cards on mobile (Option B).
-     This removes the left/right "I like" cards entirely so only the accordion
-     controls (mobile-recs) are visible at the top. */
-  [aria-labelledby="music-title"],
-  [aria-labelledby="books-title"],
-  [aria-labelledby="articles-title"],
-  [aria-labelledby="movies-title"] {
-    display: none !important;
-    visibility: hidden !important;
-    height: 0 !important;
-    width: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    border: 0 !important;
-  }
-
-  /* If any containers become empty after hiding the cards, ensure they don't force layout gaps.
-     Specifically collapse .side-cards when they contain only hidden cards. */
-  .side-cards:empty,
-  .side-cards:has([aria-labelledby="music-title"][style*="display: none"]),
-  .side-cards:has([aria-labelledby="books-title"][style*="display: none"]),
-  .side-cards:has([aria-labelledby="articles-title"][style*="display: none"]),
-  .side-cards:has([aria-labelledby="movies-title"][style*="display: none"]) {
-    display: none !important;
-  }
-
-  /* ----------------------------------------------------------------
-     ROTATOR: make image naturally align with the viewport on mobile
-     - Avoid inline JS positioning conflicts by making CSS authoritative
-     - Make the frame span the usable width of the screen while respecting page padding
-     - Ensure the image fills the frame horizontally and centers optically
-     ---------------------------------------------------------------- */
-  /* Use calc to respect main padding but still fill visually */
-  .rotator-frame {
-    width: calc(100% - 32px) !important;    /* fills screen minus safe gutters */
-    max-width: 100% !important;
-    height: auto !important;
-    margin: 12px auto !important;
-    padding: 0 !important;
-    border-radius: 8px;
-    position: relative;
-    overflow: hidden; /* keep image clipped to frame edges */
-    box-shadow: 0 8px 20px rgba(0,0,0,0.32) !important;
-    box-sizing: border-box;
-    background: #ffffff; /* neutral canvas so image edges read correctly */
-  }
-
-  /* Ensure rotator-inner centers properly and doesn't add side offsets */
-  .rotator-inner {
-    justify-content: center !important;
-    align-items: center !important;
-    padding: 0 8px !important;
-    margin: 0 !important;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  /* Force image to fill frame horizontally and keep natural aspect ratio */
-  .rotator-frame img#rotator {
-    width: 100% !important;        /* fill the frame */
-    height: auto !important;       /* preserve aspect ratio */
-    max-width: 100% !important;
-    object-fit: cover !important;  /* cover yields a natural fill — change to contain if you prefer entire image visible */
-    object-position: center center !important;
-    display: block !important;
-    margin: 0 auto !important;
-    background: transparent;
-    border-radius: 4px;
-  }
-
-  /* If you want the whole image visible (no cropping), switch to:
-     object-fit: contain !important;
-     and optionally add padding to the frame so small images don't hit edges.
-     The current default uses cover to produce a visually aligned natural fill.
-  */
-
-  /* Hide rotator arrows on mobile as requested (they caused offset issues) */
-  .rot-btn,
-  .rot-prev, .rot-next {
-    display: none !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: 0 !important;
-    background: transparent !important;
-  }
-
-  /* center dots under the rotator */
-  .rot-dots { display:flex; justify-content:center; gap:8px; margin-top: 10px; }
-
-  /* remove any accidental horizontal scrolling caused by extreme shadows or wide elements */
-  html, body { overflow-x: hidden; -webkit-overflow-scrolling: touch; }
-
-  /* reduce heavy shadows on small screens so elements read lighter and center visually */
-  .rotator-frame { box-shadow: 0 8px 20px rgba(0,0,0,0.32); }
-  .side-card { box-shadow: 0 8px 18px rgba(0,0,0,0.32); }
-
-  /* ensure post-list has space to avoid overlap with sticky music bar */
-  .post-list.centered { padding-bottom: 120px; }
-
-  /* header left-edge fix — ensure paddings don't clip on many phones */
-  .old-header {
-    padding-left: 16px !important;
-    padding-right: 12px !important;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-  }
-  .old-header ._inner {
-    max-width: 100% !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    box-sizing: border-box;
-  }
-  .site-logo { margin-left: 0 !important; }
-
-  /* Popup topbar sticky to keep close always accessible when keyboard / music bar present */
-  #sh-post-popup.mobile-fullscreen .sh-popup-topbar {
-    position: sticky;
-    top: 0;
-    z-index: 1600;
-    background: linear-gradient(transparent, rgba(0,0,0,0.05));
-  }
-
-  /* Hide floating Twitter / X icon on mobile */
-  .floating-twitter {
-    display: none !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-    opacity: 0 !important;
-  }
-
-  /* Hide the desktop audio player on mobile (so the mobile sticky bar/panel is used) */
-  #shaltz-audio-player {
-    display: none !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-    opacity: 0 !important;
-    width: 0 !important;
-    height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: 0 !important;
-  }
-
-  /* ----------------------------
-     MOBILE MUSIC BUTTON (Option A)
-     - floating circular music button (always visible)
-     - defined here so desktop remains untouched
-     ---------------------------- */
-  /* default hidden on desktop; only displayed in this mobile block */
-  .mobile-music-button { display: none; }
-
-  .mobile-music-button {
-    position: fixed;
-    right: 14px;
-    bottom: 14px;
-    z-index: 1300;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(180deg, rgba(0,0,0,0.95), rgba(0,0,0,0.86));
-    border: 2px solid rgba(182,255,0,0.12);
-    box-shadow: 0 10px 28px rgba(0,0,0,0.6);
-    color: #b6ff00;
-    font-size: 22px;
-    cursor: pointer;
-    transition: transform 120ms ease, box-shadow 120ms ease;
-    -webkit-tap-highlight-color: rgba(0,0,0,0.0);
-    touch-action: manipulation;
-  }
-  .mobile-music-button:active { transform: scale(.98); }
-  .mobile-music-button:focus { outline: 3px solid rgba(182,255,0,0.12); outline-offset: 3px; }
-
-  /* small visual pulsing ring when audio is playing (optional & subtle) */
-  .mobile-music-button.playing {
-    box-shadow: 0 10px 28px rgba(0,0,0,0.6), 0 0 12px rgba(182,255,0,0.08), 0 0 28px rgba(182,255,0,0.02);
-  }
-
-  /* ----------------------------
-     MOBILE MUSIC BAR (alternate: kept for compatibility)
-     - if you prefer a wider sticky mini-bar instead of circular icon,
-       the markup uses .mobile-music-bar. Both co-exist safely.
-     ---------------------------- */
-  .mobile-music-bar {
-    position: fixed;
-    left: 12px;
-    right: 12px;
-    bottom: 14px;
-    z-index: 1200;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 8px 10px;
-    border-radius: 12px;
-    background: linear-gradient(180deg, rgba(0,0,0,0.9), rgba(0,0,0,0.8));
-    border: 1px solid rgba(182,255,0,0.06);
-    box-shadow: 0 8px 28px rgba(0,0,0,0.6);
-  }
-
-  .mobile-music-bar .mm-title {
-    font-size: 14px;
-    color: #fff;
-    font-family: Arial, sans-serif;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .mobile-music-bar button {
-    background: none;
-    border: none;
-    color: var(--bright-border);
-    font-size: 18px;
-    padding: 8px;
-    min-width: 44px;
-    min-height: 44px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    -webkit-tap-highlight-color: transparent;
-    cursor: pointer;
-  }
-
-  .mobile-music-bar button:active,
-  .mobile-music-bar button:focus {
-    transform: translateY(0);
-    outline: none;
-  }
-
-  /* ----------------------------
-     MOBILE PLAYER PANEL (toggled open)
-     - keeps native audio controls for broad compatibility
-     ---------------------------- */
-  .mobile-player-panel {
-    position: fixed;
-    left: 12px;
-    right: 12px;
-    bottom: 86px; /* sits above circular button (safe spacing) */
-    z-index: 1250;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 12px;
-    border-radius: 12px;
-    background: linear-gradient(180deg, rgba(0,0,0,0.95), rgba(0,0,0,0.88));
-    border: 1px solid rgba(182,255,0,0.08);
-    box-shadow: 0 12px 36px rgba(0,0,0,0.6);
-  }
-
-  .mobile-player-panel.open {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .mobile-player-panel .mp-row {
-    width: 100%;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .mobile-player-panel .mp-title {
-    font-family: Arial, sans-serif;
-    color: var(--bright-border);
-    font-size: 14px;
-    font-weight: 700;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .mobile-player-panel .mp-close {
-    background: none;
-    border: 1px solid rgba(182,255,0,0.06);
-    color: var(--bright-border);
-    padding: 6px 8px;
-    border-radius: 8px;
-    font-size: 14px;
-    cursor: pointer;
-  }
-
-  /* small accessibility hint: reduce motion for users who prefer reduced motion */
-  @media (prefers-reduced-motion: reduce) {
-    .rotator-frame, .mobile-music-bar, .mobile-player-panel, .mobile-recs details, .rot-btn { transition: none !important; }
-  }
 
 }
 
-/* Narrow-phone tweaks */
-@media (max-width: 480px) {
-  .old-site-title { font-size: 32px !important; }
-  main#main-content { padding: 12px !important; }
-  .rotator-frame { width: 94vw !important; }
-  .mobile-music-bar { left: 8px; right: 8px; bottom: 10px; padding: 8px; border-radius: 10px; }
+@media (max-width:540px){
+
+.old-site-title{
+font-size:32px;
+}
+
+main#main-content{
+padding:12px;
+}
+
 }

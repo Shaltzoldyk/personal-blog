@@ -1,0 +1,104 @@
+/* POSTS.CSS — sealed memory file layout */
+
+body {
+  overflow-y: auto;
+}
+
+.post-shell {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  margin: 80px auto;
+  padding: 32px 28px;
+}
+
+.post-shell.window {
+  background: rgba(5,6,10,0.85);
+}
+
+/* FILE HEADER */
+.file-meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+
+.file-meta span {
+  display: block;
+}
+
+.file-meta .file-name {
+  color: var(--glow);
+}
+
+/* TITLE */
+.post-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 34px;
+  line-height: 1.2;
+  margin-bottom: 32px;
+}
+
+/* CONTENT */
+.post-content {
+  font-family: 'Inter', sans-serif;
+  font-size: 17px;
+  line-height: 1.75;
+}
+
+.post-content p {
+  margin-bottom: 20px;
+}
+
+.post-content h2,
+.post-content h3 {
+  margin-top: 48px;
+  margin-bottom: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--pink);
+}
+
+.post-content ul,
+.post-content ol {
+  margin: 16px 0 24px 24px;
+}
+
+.post-content li {
+  margin-bottom: 10px;
+}
+
+.post-content blockquote {
+  border-left: 2px solid var(--glow);
+  padding-left: 16px;
+  margin: 24px 0;
+  color: var(--muted);
+}
+
+.post-content strong {
+  color: var(--acid);
+}
+
+/* BACK LINK */
+.back-link {
+  display: inline-block;
+  margin-bottom: 24px;
+  font-size: 12px;
+}
+
+.back-link:hover {
+  color: var(--bg);
+  background: var(--glow);
+  padding: 4px 6px;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .post-shell {
+    margin: 40px 16px;
+    padding: 24px 20px;
+  }
+
+  .post-title {
+    font-size: 26px;
+  }
+}
