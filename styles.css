@@ -387,3 +387,57 @@ padding:12px;
 }
 
 }
+
+/* ============================================================
+   POST PAGE (READING MODE)
+   ============================================================ */
+
+body.post-page {
+  background: #0a0a0a !important;
+  color: #eaeaea !important;
+}
+
+.post-container {
+  max-width: 720px;
+  margin: 60px auto;
+  padding: 0 20px;
+}
+
+.blog-post {
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+.blog-post h1,
+.blog-post h2 {
+  color: #ffffff;
+  margin-top: 40px;
+}
+
+.blog-post p {
+  margin: 18px 0;
+}
+
+.blog-post blockquote {
+  border-left: 3px solid #b6ff00;
+  padding-left: 16px;
+  color: #cfcfcf;
+  margin: 20px 0;
+}
+
+.blog-post ul {
+  padding-left: 20px;
+}
+
+.blog-post li {
+  margin-bottom: 10px;
+}
+
+.back-home {
+  color: #b6ff00;
+  text-decoration: none;
+}
+
+.back-home:hover {
+  text-decoration: underline;
+}
