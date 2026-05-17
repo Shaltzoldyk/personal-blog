@@ -5,7 +5,7 @@
   const PLAYER_ID   = 'shaltz-audio-player';
 
   const playlist = ['Jump.mp3', 'Long Time.mp3', 'Miss The Rage.mp3'];
-  const srcFor = (f) => 'https://pub-<your-hash>.r2.dev/' + f;
+  const srcFor = (f) => 'https://pub-500beda4f7d8434ebcd5206ad2a71701.r2.dev/' + f;
 
   /* ── persistence ── */
   function load() {
