@@ -37,63 +37,6 @@ body::before {
 }
 
 /* =========================
-   CORRUPTION OVERLAY
-   subtle / eerie / occasional
-   ========================= */
-.corruption-layer {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 999;
-
-  background:
-    repeating-linear-gradient(
-      0deg,
-      rgba(255,255,255,0.02),
-      rgba(255,255,255,0.02) 1px,
-      transparent 1px,
-      transparent 2px
-    );
-
-  opacity: 0.12;
-  mix-blend-mode: overlay;
-  animation: corruption-flicker 14s infinite;
-}
-
-@keyframes corruption-flicker {
-  0%   { opacity: 0.12; }
-  45%  { opacity: 0.12; }
-  48%  { opacity: 0.22; }
-  50%  { opacity: 0.08; }
-  52%  { opacity: 0.18; }
-  100% { opacity: 0.12; }
-}
-
-/* =========================
-   MEMORY GHOSTS
-   ========================= */
-.memory-ghost {
-  position: fixed;
-  font-size: 11px;
-  font-family: 'JetBrains Mono', monospace;
-  color: rgba(0,255,225,0.35);
-  pointer-events: none;
-  opacity: 0.6;
-  z-index: 50;
-
-  animation: ghost-drift 60s linear infinite;
-}
-
-.ghost-1 { top: 22%; left: 8%; }
-.ghost-2 { top: 64%; right: 12%; }
-.ghost-3 { bottom: 18%; left: 55%; }
-
-@keyframes ghost-drift {
-  from { transform: translateY(0); }
-  to   { transform: translateY(-40px); }
-}
-
-/* =========================
    LINKS
    ========================= */
 a {
