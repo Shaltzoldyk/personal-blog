@@ -7,7 +7,7 @@
   </url>
 
   <url>
-    <loc>https://www.shaltzsmoldik.xyz/posts/future-is-a-trade.html</loc>
+    <loc>https://www.shaltzsmoldik.xyz/posts/trade-framework.html</loc>
     <priority>0.8</priority>
   </url>
 
@@ -17,7 +17,8 @@
   </url>
 
   <url>
-  <loc>https://www.shaltzsmoldik.xyz/posts/the-permanent-underclass-is-not-as-bad-as-one-might-think.html</loc>
-</url>
+    <loc>https://www.shaltzsmoldik.xyz/posts/the-permanent-underclass-is-not-as-bad-as-one-might-think.html</loc>
+    <priority>0.8</priority>
+  </url>
 
 </urlset>
