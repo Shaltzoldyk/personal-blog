@@ -1,104 +1,125 @@
-/* POSTS.CSS — sealed memory file layout */
+/* ============================================================
+   POSTS.CSS — all post reading styles live here.
+   Every post links: base.css + posts.css
+   Index never links this file.
+   ============================================================ */
+
+/* ============================================================
+   BODY & BACKGROUND
+   ============================================================ */
 
 body {
+  background: #0a0a0a;
+  color: #eaeaea;
   overflow-y: auto;
 }
 
-.post-shell {
-  position: relative;
-  z-index: 1;
-  max-width: 760px;
-  margin: 80px auto;
-  padding: 32px 28px;
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+
+.post-container {
+  max-width: 720px;
+  margin: 60px auto;
+  padding: 0 20px;
 }
 
-.post-shell.window {
-  background: rgba(5,6,10,0.85);
-}
+/* ============================================================
+   BACK LINK
+   ============================================================ */
 
-/* FILE HEADER */
-.file-meta {
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 24px;
-}
-
-.file-meta span {
-  display: block;
-}
-
-.file-meta .file-name {
-  color: var(--glow);
-}
-
-/* TITLE */
-.post-title {
-  font-family: 'Inter', sans-serif;
-  font-size: 34px;
-  line-height: 1.2;
+.back-home {
+  display: inline-block;
   margin-bottom: 32px;
+  font-size: 13px;
+  color: #b6ff00;
+  text-decoration: none;
 }
 
-/* CONTENT */
-.post-content {
+.back-home:hover {
+  text-decoration: underline;
+}
+
+/* ============================================================
+   POST CONTENT
+   ============================================================ */
+
+.blog-post {
   font-family: 'Inter', sans-serif;
-  font-size: 17px;
+  font-size: 18px;
   line-height: 1.75;
 }
 
-.post-content p {
-  margin-bottom: 20px;
+.blog-post h1 {
+  font-size: 34px;
+  line-height: 1.2;
+  color: #ffffff;
+  margin-bottom: 12px;
 }
 
-.post-content h2,
-.post-content h3 {
+.blog-post h2,
+.blog-post h3 {
+  color: #ffffff;
   margin-top: 48px;
   margin-bottom: 16px;
-  font-family: 'JetBrains Mono', monospace;
-  color: var(--pink);
 }
 
-.post-content ul,
-.post-content ol {
-  margin: 16px 0 24px 24px;
+.blog-post p {
+  margin: 18px 0;
+  color: #eaeaea;
 }
 
-.post-content li {
+.blog-post blockquote {
+  border-left: 3px solid #b6ff00;
+  padding-left: 16px;
+  color: #cfcfcf;
+  margin: 24px 0;
+}
+
+.blog-post ul,
+.blog-post ol {
+  padding-left: 24px;
+  margin: 16px 0 24px;
+}
+
+.blog-post li {
   margin-bottom: 10px;
 }
 
-.post-content blockquote {
-  border-left: 2px solid var(--glow);
-  padding-left: 16px;
+.blog-post strong {
+  color: #ffffff;
+}
+
+.blog-post img {
+  width: 100%;
   margin: 24px 0;
-  color: var(--muted);
+  border-radius: 6px;
 }
 
-.post-content strong {
-  color: var(--acid);
+.blog-post pre {
+  background: #111;
+  padding: 16px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-size: 14px;
+  color: #b6ff00;
 }
 
-/* BACK LINK */
-.back-link {
-  display: inline-block;
-  margin-bottom: 24px;
-  font-size: 12px;
-}
+/* ============================================================
+   MOBILE
+   ============================================================ */
 
-.back-link:hover {
-  color: var(--bg);
-  background: var(--glow);
-  padding: 4px 6px;
-}
-
-/* MOBILE */
 @media (max-width: 768px) {
-  .post-shell {
+  .post-container {
     margin: 40px 16px;
-    padding: 24px 20px;
+    padding: 0;
   }
 
-  .post-title {
+  .blog-post h1 {
     font-size: 26px;
+  }
+
+  .blog-post {
+    font-size: 16px;
   }
 }
